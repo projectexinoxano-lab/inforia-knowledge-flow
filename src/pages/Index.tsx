@@ -1,5 +1,5 @@
 
-import { MainDashboard } from "@/components/MainDashboard";
+import MainDashboard from "@/components/MainDashboard";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
