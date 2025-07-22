@@ -65,7 +65,9 @@ const NewPatient = () => {
   useEffect(() => {
     const dateParam = searchParams.get('date');
     if (dateParam) {
-      const selectedDate = new Date(dateParam);
+      // Parse date components to avoid timezone issues
+      const [year, month, day] = dateParam.split('-').map(Number);
+      const selectedDate = new Date(year, month - 1, day); // month is 0-indexed
       setPatientData(prev => ({
         ...prev,
         appointmentDate: selectedDate
