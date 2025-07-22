@@ -9,15 +9,15 @@ const MainDashboard = () => {
       <DashboardHeader />
 
       {/* Main Content Area */}
-      <main className="container mx-auto px-6 py-8 h-[calc(100vh-100px)]">
-        <div className="grid grid-cols-10 gap-8 h-full">
-          {/* Left Column - 70% width (7 out of 10 columns) */}
-          <div className="col-span-7 flex items-center">
+      <main className="container mx-auto px-6 py-6 h-[calc(100vh-90px)]">
+        <div className="grid grid-cols-12 gap-6 h-full">
+          {/* Left Column - 65% width (8 out of 12 columns) */}
+          <div className="col-span-8 flex items-center">
             <DayFocus />
           </div>
 
-          {/* Right Column - 30% width (3 out of 10 columns) */}
-          <div className="col-span-3 flex items-center">
+          {/* Right Column - 35% width (4 out of 12 columns) */}
+          <div className="col-span-4 flex items-stretch">
             <CalendarModule />
           </div>
         </div>
