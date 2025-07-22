@@ -1,16 +1,18 @@
-import { Search, MoreVertical, UserCircle } from "lucide-react";
+import { Search, MoreVertical, UserCircle, Calendar, Users, Plus, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
   Avatar,
   AvatarFallback,
 } from "@/components/ui/avatar";
+import { Link } from "react-router-dom";
 
 const Header = () => {
   return (
@@ -19,7 +21,9 @@ const Header = () => {
         <div className="flex items-center justify-between">
           {/* Logo */}
           <div className="flex items-center">
-            <h1 className="font-serif text-2xl font-medium text-primary">iNFORiA</h1>
+            <Link to="/" className="hover:opacity-80 transition-calm">
+              <h1 className="font-serif text-2xl font-medium text-primary">iNFORiA</h1>
+            </Link>
           </div>
 
           {/* Search Bar */}
@@ -43,11 +47,31 @@ const Header = () => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuItem>Dashboard</DropdownMenuItem>
-                <DropdownMenuItem>Pacientes</DropdownMenuItem>
-                <DropdownMenuItem>Crear Ficha de Paciente</DropdownMenuItem>
-                <DropdownMenuItem>Redactar Informe</DropdownMenuItem>
-                <DropdownMenuItem>FAQs</DropdownMenuItem>
+                <DropdownMenuItem className="cursor-pointer">
+                  <Link to="/" className="w-full flex items-center">
+                    <Calendar className="mr-2 h-4 w-4" />
+                    Dashboard
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem className="cursor-pointer">
+                  <Link to="/patient-list" className="w-full flex items-center">
+                    <Users className="mr-2 h-4 w-4" />
+                    Pacientes
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem className="cursor-pointer">
+                  <Link to="/new-patient" className="w-full flex items-center">
+                    <Plus className="mr-2 h-4 w-4" />
+                    Crear Ficha de Paciente
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem className="cursor-pointer">
+                  <Link to="/faqs" className="w-full flex items-center">
+                    <HelpCircle className="mr-2 h-4 w-4" />
+                    FAQs
+                  </Link>
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
 
@@ -63,7 +87,9 @@ const Header = () => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem>Mi Cuenta</DropdownMenuItem>
+                <DropdownMenuItem className="cursor-pointer">
+                  <Link to="/my-account" className="w-full">Mi Cuenta</Link>
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>

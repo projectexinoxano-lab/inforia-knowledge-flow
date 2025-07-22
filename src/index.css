@@ -9,7 +9,7 @@ All colors MUST be HSL for consistency.
 
 @layer base {
   :root {
-    /* iNFORiA Brand Colors - Exact Match */
+    /* iNFORiA Brand Colors - Official Palette */
     --background: 40 40% 98%; /* Blanco Hueso #FBF9F6 */
     --foreground: 0 0% 20%; /* Gris Grafito #333333 */
 
@@ -22,6 +22,14 @@ All colors MUST be HSL for consistency.
     /* Verde INFORIA (#2E403B) - HSL: 155, 17%, 21% */
     --primary: 155 17% 21%;
     --primary-foreground: 40 40% 98%; /* Blanco Hueso for text on green */
+    
+    /* Burdeos Acento (#800020) - HSL: 345, 100%, 25% */
+    --burgundy: 345 100% 25%;
+    --burgundy-foreground: 40 40% 98%;
+    
+    /* Dorado Premium (#D4AF37) - HSL: 43, 74%, 49% */
+    --gold: 43 74% 49%;
+    --gold-foreground: 0 0% 20%;
 
     /* Secondary using Blanco Hueso background */
     --secondary: 40 40% 96%;

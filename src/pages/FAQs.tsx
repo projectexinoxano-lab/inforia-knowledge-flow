@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Header } from "@/components/Header";
+import { NavigationHeader } from "@/components/NavigationHeader";
 import {
   Accordion,
   AccordionContent,
@@ -39,7 +39,7 @@ const FAQs = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
+      <NavigationHeader />
       
       <main className="container mx-auto px-6 py-8 max-w-4xl">
         {/* Page Title */}

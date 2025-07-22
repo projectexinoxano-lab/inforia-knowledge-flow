@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import DashboardHeader from "@/components/DashboardHeader";
+import { NavigationHeader } from "@/components/NavigationHeader";
 
 const MyAccount = () => {
   const [activeTab, setActiveTab] = useState("professional");
@@ -33,7 +33,7 @@ const MyAccount = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <DashboardHeader />
+      <NavigationHeader />
       
       <div className="container mx-auto px-6 py-8">
         <h1 className="font-serif text-3xl font-medium text-foreground mb-8">Mi Cuenta</h1>

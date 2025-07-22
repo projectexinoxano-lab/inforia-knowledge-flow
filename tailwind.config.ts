@@ -57,6 +57,14 @@ export default {
 					foreground: 'hsl(var(--card-foreground))'
 				},
 				/* iNFORiA Custom Colors */
+				burgundy: {
+					DEFAULT: 'hsl(var(--burgundy))',
+					foreground: 'hsl(var(--burgundy-foreground))'
+				},
+				gold: {
+					DEFAULT: 'hsl(var(--gold))',
+					foreground: 'hsl(var(--gold-foreground))'
+				},
 				calendar: {
 					today: 'hsl(var(--calendar-today))',
 					selected: 'hsl(var(--calendar-selected))',

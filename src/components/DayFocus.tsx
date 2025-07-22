@@ -1,4 +1,8 @@
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Calendar, Clock } from "lucide-react";
+import { Link } from "react-router-dom";
 
 interface Appointment {
   id: string;
@@ -92,10 +96,13 @@ const DayFocus = () => {
                   {appointment.time}
                 </div>
 
-                {/* Patient Name */}
-                <div className="text-xl text-foreground font-medium">
+                 {/* Patient Name */}
+                <Link 
+                  to={`/patient-detailed-profile?id=${appointment.id}`}
+                  className="text-xl text-foreground font-medium hover:text-primary transition-calm"
+                >
                   {appointment.patientName}
-                </div>
+                </Link>
 
                 {/* Status Indicator */}
                 <div className="flex items-center space-x-2">
@@ -107,9 +114,11 @@ const DayFocus = () => {
               </div>
 
               {/* Action Button */}
-              <Button size="lg" className="font-medium px-6 py-3 bg-primary hover:bg-primary/90 text-primary-foreground">
-                Registrar Sesión
-              </Button>
+              <Link to={`/session-workspace?appointmentId=${appointment.id}`}>
+                <Button size="lg" className="font-medium px-6 py-3 bg-primary hover:bg-primary/90 text-primary-foreground">
+                  Registrar Sesión
+                </Button>
+              </Link>
             </div>
           ))}
         </div>
