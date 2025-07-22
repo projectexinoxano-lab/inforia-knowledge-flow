@@ -129,7 +129,7 @@ const NewPatient = () => {
     navigate("/session-workspace?newPatient=true");
   };
 
-  const isFormValid = patientData.firstName && patientData.lastName && patientData.email;
+  const isFormValid = patientData.firstName && patientData.lastName && patientData.email && patientData.phone && patientData.gender && patientData.birthDate;
 
   return (
     <div className="min-h-screen bg-background">
@@ -192,7 +192,7 @@ const NewPatient = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="phone" className="font-sans">Teléfono</Label>
+                    <Label htmlFor="phone" className="font-sans">Teléfono *</Label>
                     <Input
                       id="phone"
                       value={patientData.phone}
@@ -205,7 +205,7 @@ const NewPatient = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="font-sans">Fecha de Nacimiento</Label>
+                    <Label className="font-sans">Fecha de Nacimiento *</Label>
                     <Popover>
                       <PopoverTrigger asChild>
                         <Button
@@ -236,7 +236,7 @@ const NewPatient = () => {
                   </div>
                   
                   <div className="space-y-2">
-                    <Label className="font-sans">Género</Label>
+                    <Label className="font-sans">Género *</Label>
                     <Select onValueChange={(value) => handleInputChange("gender", value)}>
                       <SelectTrigger className="font-sans">
                         <SelectValue placeholder="Selecciona género" />
