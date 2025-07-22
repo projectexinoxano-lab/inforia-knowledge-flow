@@ -1,38 +1,48 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Play, Square, Plus, Upload, FileAudio } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { Play, Square, Upload, FileAudio, Volume2, Trash2 } from "lucide-react";
 
 const SessionWorkspace = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [timer, setTimer] = useState("00:00");
   const [notes, setNotes] = useState("");
+  const [hasFinishedRecording, setHasFinishedRecording] = useState(false);
+  const [finalDuration, setFinalDuration] = useState("");
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isRecording) {
+      const startTime = Date.now();
+      interval = setInterval(() => {
+        const elapsed = Date.now() - startTime;
+        const minutes = Math.floor(elapsed / 60000);
+        const seconds = Math.floor((elapsed % 60000) / 1000);
+        setTimer(`${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [isRecording]);
 
   const handleStartRecording = () => {
     setIsRecording(true);
+    setHasFinishedRecording(false);
+    setTimer("00:00");
     // TODO: Implement actual recording logic
   };
 
   const handleStopRecording = () => {
     setIsRecording(false);
+    setFinalDuration(timer);
+    setHasFinishedRecording(true);
     // TODO: Implement stop recording logic
   };
 
-  const handleInsertTimestamp = () => {
-    const timestamp = `[${timer}] `;
-    const textarea = document.querySelector('textarea');
-    if (textarea) {
-      const start = textarea.selectionStart;
-      const end = textarea.selectionEnd;
-      const newNotes = notes.slice(0, start) + timestamp + notes.slice(end);
-      setNotes(newNotes);
-      
-      // Set cursor position after the timestamp
-      setTimeout(() => {
-        textarea.selectionStart = textarea.selectionEnd = start + timestamp.length;
-        textarea.focus();
-      }, 0);
-    }
+  const handleDeleteRecording = () => {
+    setHasFinishedRecording(false);
+    setTimer("00:00");
+    setFinalDuration("");
   };
 
   return (
@@ -54,10 +64,10 @@ const SessionWorkspace = () => {
             </h1>
           </div>
 
-          {/* Unified Control Bar */}
+          {/* Recording Control Bar */}
           <div className="bg-card border border-module-border rounded-lg p-6">
             <div className="flex items-center justify-between">
-              {/* Recording Controls */}
+              {/* Action Buttons */}
               <div className="flex items-center space-x-3">
                 {!isRecording ? (
                   <Button 
@@ -78,27 +88,45 @@ const SessionWorkspace = () => {
                 )}
               </div>
 
-              {/* Live Timer */}
-              <div className="text-center">
-                <div className="text-2xl font-mono font-bold text-foreground">
-                  {timer} / 60:00
+              {/* Status Indicator - Only when recording */}
+              {isRecording && (
+                <div className="flex items-center space-x-2 text-destructive font-medium">
+                  <div className="w-2 h-2 bg-destructive rounded-full animate-pulse"></div>
+                  <span>GRABANDO | {timer}</span>
                 </div>
-                <div className="text-sm text-muted-foreground">
-                  {isRecording ? "Grabando..." : "Detenido"}
-                </div>
-              </div>
-
-              {/* Timestamp Action */}
-              <Button 
-                variant="secondary"
-                onClick={handleInsertTimestamp}
-                disabled={!isRecording}
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Insertar Timestamp en Notas
-              </Button>
+              )}
             </div>
           </div>
+
+          {/* Finished Recording Component - Only appears after stopping */}
+          {hasFinishedRecording && (
+            <Card className="p-6 border border-module-border">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <Volume2 className="h-5 w-5 text-muted-foreground" />
+                  <div>
+                    <div className="font-medium text-foreground">
+                      Grabación de la sesión.mp3 ({finalDuration})
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Button variant="secondary" size="sm">
+                    <Play className="mr-2 h-4 w-4" />
+                    Escuchar
+                  </Button>
+                  <Button 
+                    variant="secondary" 
+                    size="sm"
+                    onClick={handleDeleteRecording}
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Eliminar
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          )}
 
           {/* Session Notes Area */}
           <div className="space-y-4">
@@ -108,7 +136,7 @@ const SessionWorkspace = () => {
             <Textarea 
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Escribe aquí tus notas. Usa el botón '+ Insertar Timestamp' para anclar una nota a un momento específico de la grabación."
+              placeholder="Escribe aquí tus notas. El sistema las sincronizará automáticamente con la grabación."
               className="min-h-[400px] text-base resize-none font-sans"
             />
           </div>
