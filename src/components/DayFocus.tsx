@@ -70,7 +70,7 @@ const DayFocus = () => {
   };
 
   return (
-    <div className="bg-card rounded-lg border border-module-border p-8 h-full flex flex-col justify-center">
+    <div className="bg-card rounded-lg border border-module-border p-8 w-full max-w-4xl mx-auto">
       {/* Title */}
       <div className="text-center mb-8">
         <h2 className="font-serif text-3xl font-medium text-foreground">
@@ -80,7 +80,7 @@ const DayFocus = () => {
 
       {/* Appointments List */}
       {displayedAppointments.length > 0 ? (
-        <div className="space-y-6 max-w-4xl mx-auto w-full">
+        <div className="space-y-6">
           {displayedAppointments.map((appointment) => (
             <div 
               key={appointment.id}

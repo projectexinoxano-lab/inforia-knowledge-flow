@@ -73,7 +73,7 @@ const CalendarModule = () => {
   const weekDays = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
 
   return (
-    <div className="bg-card rounded-lg border border-module-border p-8 h-full flex flex-col">
+    <div className="bg-card rounded-lg border border-module-border p-8 w-full h-full">
       {/* Title */}
       <h3 className="font-serif text-2xl font-medium text-foreground mb-6 text-center">
         Calendario
