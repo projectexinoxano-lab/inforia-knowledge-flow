@@ -6,10 +6,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import DashboardHeader from "@/components/DashboardHeader";
-import { Edit, Plus, FileText, Calendar, Trash2, User, Tag, FileSignature, Clock, CreditCard, FileCheck } from "lucide-react";
+import { Edit, Plus, FileText, Calendar, Trash2, User, Tag, FileSignature, Clock, CreditCard, FileCheck, X } from "lucide-react";
 
 const PatientDetailedProfile = () => {
   const [isEditing, setIsEditing] = useState(false);
+  const [newTag, setNewTag] = useState("");
   const [patientData, setPatientData] = useState({
     name: "Paz García",
     phone: "+34 600 123 456",
@@ -52,6 +53,23 @@ const PatientDetailedProfile = () => {
       i === index ? { ...payment, [field]: value } : payment
     );
     setPaymentData(updatedPayments);
+  };
+
+  const handleAddTag = () => {
+    if (newTag.trim() && !patientData.tags.includes(newTag.trim())) {
+      setPatientData({
+        ...patientData,
+        tags: [...patientData.tags, newTag.trim()]
+      });
+      setNewTag("");
+    }
+  };
+
+  const handleRemoveTag = (indexToRemove: number) => {
+    setPatientData({
+      ...patientData,
+      tags: patientData.tags.filter((_, index) => index !== indexToRemove)
+    });
   };
 
   return (
@@ -231,14 +249,37 @@ const PatientDetailedProfile = () => {
                 </h3>
                 <div className="flex flex-wrap gap-2">
                   {patientData.tags.map((tag, index) => (
-                    <Badge key={index} variant="secondary">
+                    <Badge key={index} variant="secondary" className="flex items-center gap-1">
                       {tag}
+                      {isEditing && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-4 w-4 p-0 hover:bg-destructive/20"
+                          onClick={() => handleRemoveTag(index)}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      )}
                     </Badge>
                   ))}
                   {isEditing && (
-                    <Button variant="outline" size="sm">
-                      <Plus className="h-3 w-3" />
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        value={newTag}
+                        onChange={(e) => setNewTag(e.target.value)}
+                        placeholder="Nueva etiqueta"
+                        className="w-32 h-8 text-sm"
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter') {
+                            handleAddTag();
+                          }
+                        }}
+                      />
+                      <Button variant="outline" size="sm" onClick={handleAddTag}>
+                        <Plus className="h-3 w-3" />
+                      </Button>
+                    </div>
                   )}
                 </div>
               </div>
