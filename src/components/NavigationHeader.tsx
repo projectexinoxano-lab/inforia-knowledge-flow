@@ -78,37 +78,17 @@ export const NavigationHeader = () => {
           </DropdownMenuContent>
         </DropdownMenu>
 
-        {/* User Avatar Dropdown */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-              <Avatar className="h-8 w-8">
-                <AvatarImage src="/placeholder.svg" alt="Usuario" />
-                <AvatarFallback className="bg-primary text-primary-foreground">
-                  <User className="h-4 w-4" />
-                </AvatarFallback>
-              </Avatar>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-56" align="end" forceMount>
-            <DropdownMenuItem className="font-sans cursor-pointer hover:bg-secondary">
-              <Link to="/my-account" className="w-full">Mi Cuenta</Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem className="font-sans cursor-pointer hover:bg-secondary">
-              Configuración
-            </DropdownMenuItem>
-            <DropdownMenuItem className="font-sans cursor-pointer hover:bg-secondary">
-              Perfil
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="font-sans cursor-pointer hover:bg-secondary">
-              Ayuda
-            </DropdownMenuItem>
-            <DropdownMenuItem className="font-sans cursor-pointer hover:bg-secondary">
-              Cerrar Sesión
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        {/* User Avatar - Direct Link */}
+        <Link to="/my-account">
+          <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+            <Avatar className="h-8 w-8">
+              <AvatarImage src="/placeholder.svg" alt="Usuario" />
+              <AvatarFallback className="bg-primary text-primary-foreground">
+                <User className="h-4 w-4" />
+              </AvatarFallback>
+            </Avatar>
+          </Button>
+        </Link>
       </div>
     </header>
   );
