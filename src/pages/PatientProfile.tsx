@@ -11,6 +11,7 @@ import { Check, X } from "lucide-react";
 export default function PatientProfile() {
   const [editMode, setEditMode] = useState(false);
   const [patientData, setPatientData] = useState({
+    nombreCompleto: "Paz García Fernández",
     telefono: "+34 656 789 012",
     telefonoEmergencia: "+34 911 234 567",
     email: "paz.garcia@email.com",
@@ -67,11 +68,14 @@ export default function PatientProfile() {
           <div className="flex items-center gap-3">
             <Button 
               size="lg" 
-              className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium"
+              className="bg-primary hover:bg-[#FBF9F6] hover:text-primary text-primary-foreground font-medium border border-primary transition-colors"
             >
               + Redactar Nuevo Informe
             </Button>
-            <Button variant="outline" size="lg" className="font-medium">
+            <Button 
+              size="lg" 
+              className="bg-primary hover:bg-[#FBF9F6] hover:text-primary text-primary-foreground font-medium border border-primary transition-colors"
+            >
               Generar Dosier de Alta
             </Button>
           </div>
@@ -93,6 +97,7 @@ export default function PatientProfile() {
                 <h3 className="font-serif font-medium text-foreground mb-4">Datos Fijos</h3>
                 <div className="space-y-3">
                   {Object.entries({
+                    "Nombre Completo": "nombreCompleto",
                     "Teléfono": "telefono",
                     "Tel. Emergencia": "telefonoEmergencia", 
                     "Email": "email",
@@ -143,14 +148,14 @@ export default function PatientProfile() {
                 <Button
                   variant="outline"
                   onClick={() => setEditMode(!editMode)}
-                  className="border-primary text-primary hover:bg-primary hover:text-primary-foreground"
+                  className="border-primary text-primary hover:bg-[#FBF9F6] hover:border-primary transition-colors"
                 >
                   {editMode ? "Cancelar" : "Editar Datos"}
                 </Button>
                 {editMode && (
                   <Button
                     onClick={handleSave}
-                    className="bg-primary hover:bg-primary/90 text-primary-foreground"
+                    className="bg-primary hover:bg-[#FBF9F6] hover:text-primary text-primary-foreground border border-primary transition-colors"
                   >
                     Guardar Cambios
                   </Button>
