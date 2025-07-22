@@ -72,8 +72,9 @@ const CalendarModule = () => {
   };
 
   const handleDayClick = (day: number) => {
-    const selectedDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
-    const dateParam = selectedDate.toISOString().split('T')[0]; // Format: YYYY-MM-DD
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth() + 1; // +1 because getMonth() returns 0-11
+    const dateParam = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
     navigate(`/new-patient?date=${dateParam}`);
   };
 
