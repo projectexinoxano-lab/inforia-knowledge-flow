@@ -11,9 +11,7 @@ const Index = () => {
           
         </Link>
         <Link to="/my-account">
-          <Button variant="outline" size="sm">
-            Mi Cuenta
-          </Button>
+          
         </Link>
       </div>
     </div>;
