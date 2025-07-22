@@ -17,7 +17,7 @@ const MainDashboard = () => {
           </div>
 
           {/* Right Column - 35% width (4 out of 12 columns) */}
-          <div className="col-span-4 flex items-center justify-center">
+          <div className="col-span-4 flex items-center justify-start pl-4">
             <CalendarModule />
           </div>
         </div>
