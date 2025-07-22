@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -8,6 +9,7 @@ import Index from "./pages/Index";
 import SessionWorkspace from "./pages/SessionWorkspace";
 import PatientProfile from "./pages/PatientProfile";
 import PatientDetailedProfile from "./pages/PatientDetailedProfile";
+import MyAccount from "./pages/MyAccount";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -23,6 +25,7 @@ const App = () => (
           <Route path="/session-workspace" element={<SessionWorkspace />} />
           <Route path="/patient-profile" element={<PatientProfile />} />
           <Route path="/patient-detailed-profile" element={<PatientDetailedProfile />} />
+          <Route path="/my-account" element={<MyAccount />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
