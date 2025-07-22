@@ -6,13 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Search, Plus, Eye, Edit, MoreVertical } from "lucide-react";
 import { Link } from "react-router-dom";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 interface Patient {
   id: string;
   name: string;
@@ -23,50 +17,43 @@ interface Patient {
   totalSessions: number;
   tags: string[];
 }
-
-const mockPatients: Patient[] = [
-  {
-    id: "1",
-    name: "María García López",
-    email: "maria.garcia@email.com",
-    phone: "+34 612 345 678",
-    lastSession: "2024-01-20",
-    status: "Activo",
-    totalSessions: 12,
-    tags: ["Ansiedad", "Terapia Cognitiva"]
-  },
-  {
-    id: "2",
-    name: "Carlos Ruiz Mendez",
-    email: "carlos.ruiz@email.com",
-    phone: "+34 678 901 234",
-    lastSession: "2024-01-18",
-    status: "Activo",
-    totalSessions: 8,
-    tags: ["Depresión", "Mindfulness"]
-  },
-  {
-    id: "3",
-    name: "Ana Fernández Silva",
-    email: "ana.fernandez@email.com",
-    phone: "+34 645 123 789",
-    lastSession: "2023-12-15",
-    status: "En pausa",
-    totalSessions: 15,
-    tags: ["Trauma", "EMDR"]
-  },
-  {
-    id: "4",
-    name: "Javier Moreno Castro",
-    email: "javier.moreno@email.com",
-    phone: "+34 699 876 543",
-    lastSession: "2024-01-19",
-    status: "Activo",
-    totalSessions: 6,
-    tags: ["Pareja", "Sistémica"]
-  },
-];
-
+const mockPatients: Patient[] = [{
+  id: "1",
+  name: "María García López",
+  email: "maria.garcia@email.com",
+  phone: "+34 612 345 678",
+  lastSession: "2024-01-20",
+  status: "Activo",
+  totalSessions: 12,
+  tags: ["Ansiedad", "Terapia Cognitiva"]
+}, {
+  id: "2",
+  name: "Carlos Ruiz Mendez",
+  email: "carlos.ruiz@email.com",
+  phone: "+34 678 901 234",
+  lastSession: "2024-01-18",
+  status: "Activo",
+  totalSessions: 8,
+  tags: ["Depresión", "Mindfulness"]
+}, {
+  id: "3",
+  name: "Ana Fernández Silva",
+  email: "ana.fernandez@email.com",
+  phone: "+34 645 123 789",
+  lastSession: "2023-12-15",
+  status: "En pausa",
+  totalSessions: 15,
+  tags: ["Trauma", "EMDR"]
+}, {
+  id: "4",
+  name: "Javier Moreno Castro",
+  email: "javier.moreno@email.com",
+  phone: "+34 699 876 543",
+  lastSession: "2024-01-19",
+  status: "Activo",
+  totalSessions: 6,
+  tags: ["Pareja", "Sistémica"]
+}];
 const PatientList = () => {
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -80,9 +67,7 @@ const PatientList = () => {
         return "bg-gray-100 text-gray-800 border-gray-200";
     }
   };
-
-  return (
-    <div className="min-h-screen bg-background">
+  return <div className="min-h-screen bg-background">
       <NavigationHeader />
       
       <main className="container mx-auto px-6 py-8 max-w-7xl">
@@ -111,10 +96,7 @@ const PatientList = () => {
             <div className="flex items-center space-x-4">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Buscar por nombre, email o teléfono..."
-                  className="pl-10"
-                />
+                <Input placeholder="Buscar por nombre, email o teléfono..." className="pl-10" />
               </div>
               <Button variant="outline" className="font-sans">
                 Filtros
@@ -124,51 +106,7 @@ const PatientList = () => {
         </Card>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-sans text-muted-foreground">Total Pacientes</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-serif font-semibold text-foreground">
-                {mockPatients.length}
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-sans text-muted-foreground">Pacientes Activos</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-serif font-semibold text-green-600">
-                {mockPatients.filter(p => p.status === "Activo").length}
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-sans text-muted-foreground">En Pausa</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-serif font-semibold text-yellow-600">
-                {mockPatients.filter(p => p.status === "En pausa").length}
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-sans text-muted-foreground">Sesiones Total</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-serif font-semibold text-primary">
-                {mockPatients.reduce((total, patient) => total + patient.totalSessions, 0)}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        
 
         {/* Patients List */}
         <Card>
@@ -177,8 +115,7 @@ const PatientList = () => {
           </CardHeader>
           <CardContent className="p-0">
             <div className="divide-y divide-border">
-              {mockPatients.map((patient) => (
-                <div key={patient.id} className="p-6 hover:bg-secondary/50 transition-calm">
+              {mockPatients.map(patient => <div key={patient.id} className="p-6 hover:bg-secondary/50 transition-calm">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4">
                       <Avatar className="h-12 w-12">
@@ -189,10 +126,7 @@ const PatientList = () => {
                       </Avatar>
                       
                       <div className="space-y-1">
-                        <Link 
-                          to={`/patient-detailed-profile?id=${patient.id}`}
-                          className="font-serif text-lg font-medium text-foreground hover:text-primary transition-calm"
-                        >
+                        <Link to={`/patient-detailed-profile?id=${patient.id}`} className="font-serif text-lg font-medium text-foreground hover:text-primary transition-calm">
                           {patient.name}
                         </Link>
                         <div className="flex items-center space-x-4 text-sm text-muted-foreground font-sans">
@@ -206,11 +140,9 @@ const PatientList = () => {
                           <Badge className={getStatusColor(patient.status)}>
                             {patient.status}
                           </Badge>
-                          {patient.tags.map((tag) => (
-                            <Badge key={tag} variant="outline" className="font-sans">
+                          {patient.tags.map(tag => <Badge key={tag} variant="outline" className="font-sans">
                               {tag}
-                            </Badge>
-                          ))}
+                            </Badge>)}
                         </div>
                       </div>
                     </div>
@@ -228,19 +160,13 @@ const PatientList = () => {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem>
-                            <Link 
-                              to={`/patient-detailed-profile?id=${patient.id}`}
-                              className="w-full flex items-center"
-                            >
+                            <Link to={`/patient-detailed-profile?id=${patient.id}`} className="w-full flex items-center">
                               <Eye className="mr-2 h-4 w-4" />
                               Ver Ficha
                             </Link>
                           </DropdownMenuItem>
                           <DropdownMenuItem>
-                            <Link 
-                              to={`/session-workspace?patientId=${patient.id}`}
-                              className="w-full flex items-center"
-                            >
+                            <Link to={`/session-workspace?patientId=${patient.id}`} className="w-full flex items-center">
                               <Edit className="mr-2 h-4 w-4" />
                               Nueva Sesión
                             </Link>
@@ -249,14 +175,11 @@ const PatientList = () => {
                       </DropdownMenu>
                     </div>
                   </div>
-                </div>
-              ))}
+                </div>)}
             </div>
           </CardContent>
         </Card>
       </main>
-    </div>
-  );
+    </div>;
 };
-
 export default PatientList;
