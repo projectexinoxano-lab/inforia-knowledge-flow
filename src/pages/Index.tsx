@@ -15,11 +15,6 @@ const Index = () => {
             Registro de Sesión
           </Button>
         </Link>
-        <Link to="/patient-profile">
-          <Button variant="outline" size="sm">
-            Perfil de Paciente
-          </Button>
-        </Link>
         <Link to="/my-account">
           <Button variant="outline" size="sm">
             Mi Cuenta
