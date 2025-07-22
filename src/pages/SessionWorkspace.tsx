@@ -159,7 +159,7 @@ const SessionWorkspace = () => {
             <Button 
               variant="secondary"
               size="lg" 
-              className="h-12 px-8 text-base font-medium"
+              className="h-12 px-8 text-base font-medium bg-primary text-primary-foreground hover:bg-background hover:text-foreground border hover:border-primary transition-calm"
             >
               Guardar Borrador
             </Button>
