@@ -10,23 +10,44 @@ interface Appointment {
 const mockAppointments: Appointment[] = [
   {
     id: "1",
+    time: "09:00",
+    patientName: "Carmen López",
+    status: "Pendiente"
+  },
+  {
+    id: "2",
     time: "10:00",
     patientName: "Paz García",
     status: "Pendiente"
   },
   {
-    id: "2", 
+    id: "3", 
     time: "12:30",
     patientName: "Marcos Alonso",
     status: "Pendiente"
   },
   {
-    id: "3",
-    time: "16:00", 
+    id: "4",
+    time: "14:00",
     patientName: "Ana Martínez",
+    status: "Pendiente"
+  },
+  {
+    id: "5",
+    time: "16:00", 
+    patientName: "Luis Rodríguez",
+    status: "Pendiente"
+  },
+  {
+    id: "6",
+    time: "17:30", 
+    patientName: "Sofia Hernández",
     status: "Pendiente"
   }
 ];
+
+// Mostrar solo los primeros 5 pacientes
+const displayedAppointments = mockAppointments.slice(0, 5);
 
 const DayFocus = () => {
   const currentDate = new Date().toLocaleDateString('es-ES', {
@@ -49,28 +70,30 @@ const DayFocus = () => {
   };
 
   return (
-    <div className="bg-card rounded-lg border border-module-border p-6">
+    <div className="bg-card rounded-lg border border-module-border p-8 h-full flex flex-col justify-center">
       {/* Title */}
-      <h2 className="font-serif text-2xl font-medium text-foreground mb-6">
-        Foco del Día: {currentDate}
-      </h2>
+      <div className="text-center mb-8">
+        <h2 className="font-serif text-3xl font-medium text-foreground">
+          Foco del Día: {currentDate}
+        </h2>
+      </div>
 
       {/* Appointments List */}
-      {mockAppointments.length > 0 ? (
-        <div className="space-y-4">
-          {mockAppointments.map((appointment) => (
+      {displayedAppointments.length > 0 ? (
+        <div className="space-y-6 max-w-4xl mx-auto w-full">
+          {displayedAppointments.map((appointment) => (
             <div 
               key={appointment.id}
-              className="flex items-center justify-between p-4 bg-background rounded-lg border border-module-border transition-calm hover:shadow-sm"
+              className="flex items-center justify-between p-6 bg-background rounded-lg border border-module-border transition-calm hover:shadow-md"
             >
               <div className="flex items-center space-x-4">
                 {/* Time */}
-                <div className="text-lg font-medium text-foreground min-w-[60px]">
+                <div className="text-xl font-semibold text-foreground min-w-[70px]">
                   {appointment.time}
                 </div>
 
                 {/* Patient Name */}
-                <div className="text-lg text-foreground">
+                <div className="text-xl text-foreground font-medium">
                   {appointment.patientName}
                 </div>
 
@@ -84,7 +107,7 @@ const DayFocus = () => {
               </div>
 
               {/* Action Button */}
-              <Button className="font-medium">
+              <Button size="lg" className="font-medium px-6 py-3">
                 Registrar Sesión
               </Button>
             </div>
