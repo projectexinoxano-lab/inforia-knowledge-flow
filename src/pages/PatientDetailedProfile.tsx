@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import DashboardHeader from "@/components/DashboardHeader";
-import { Edit, Plus, FileText, Calendar, Trash2, User, Tag, FileSignature, Clock, CreditCard } from "lucide-react";
+import { Edit, Plus, FileText, Calendar, Trash2, User, Tag, FileSignature, Clock, CreditCard, FileCheck } from "lucide-react";
 
 const PatientDetailedProfile = () => {
   const [isEditing, setIsEditing] = useState(false);
@@ -34,6 +34,11 @@ const PatientDetailedProfile = () => {
   const handleDeletePatient = () => {
     // TODO: Implement delete logic
     console.log("Eliminar paciente");
+  };
+
+  const handleAcudirInforme = () => {
+    // TODO: Implement acudir informe logic
+    console.log("Acudir informe");
   };
 
   return (
@@ -66,6 +71,13 @@ const PatientDetailedProfile = () => {
               <Button variant="secondary">
                 <FileText className="mr-2 h-4 w-4" />
                 Generar Dosier de Alta
+              </Button>
+              <Button 
+                variant="secondary"
+                onClick={handleAcudirInforme}
+              >
+                <FileCheck className="mr-2 h-4 w-4" />
+                Acudir el Informe
               </Button>
             </div>
           </div>
