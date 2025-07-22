@@ -72,13 +72,6 @@ const PatientDetailedProfile = () => {
                 <FileText className="mr-2 h-4 w-4" />
                 Generar Dosier de Alta
               </Button>
-              <Button 
-                variant="secondary"
-                onClick={handleAcudirInforme}
-              >
-                <FileCheck className="mr-2 h-4 w-4" />
-                Acudir el Informe
-              </Button>
             </div>
           </div>
         </div>
