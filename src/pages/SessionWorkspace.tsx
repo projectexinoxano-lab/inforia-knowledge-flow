@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
+import DashboardHeader from "@/components/DashboardHeader";
 import { Play, Square, Upload, FileAudio, Volume2, Trash2 } from "lucide-react";
 
 const SessionWorkspace = () => {
@@ -47,12 +48,8 @@ const SessionWorkspace = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header with INFORIA branding */}
-      <header className="border-b border-module-border bg-background">
-        <div className="container mx-auto px-6 py-4">
-          <h1 className="font-serif text-2xl font-medium text-primary">iNFORiA</h1>
-        </div>
-      </header>
+      {/* Global Header for consistency */}
+      <DashboardHeader />
 
       {/* Main content - centered single column */}
       <main className="container mx-auto px-6 py-12 max-w-4xl">
