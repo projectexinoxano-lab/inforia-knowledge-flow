@@ -111,7 +111,7 @@ const PatientList = () => {
         {/* Patients List */}
         <Card>
           <CardHeader>
-            <CardTitle className="font-serif text-xl">Lista de Pacientes</CardTitle>
+            
           </CardHeader>
           <CardContent className="p-0">
             <div className="divide-y divide-border">
