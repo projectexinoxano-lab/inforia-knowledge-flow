@@ -361,7 +361,7 @@ const NewPatient = () => {
                 <Button
                   onClick={handleSaveAndCreateReport}
                   disabled={!isFormValid || isSubmitting}
-                  className="w-full bg-inforia hover:bg-bone text-white hover:text-inforia font-sans transition-colors"
+                  className="w-full bg-green-600 hover:bg-bone text-white hover:text-inforia font-sans transition-colors"
                 >
                   <FileText className="mr-2 h-4 w-4" />
                   {isSubmitting ? "Guardando..." : "Guardar y Crear 1er Informe"}
