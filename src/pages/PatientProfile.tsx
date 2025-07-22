@@ -146,9 +146,8 @@ export default function PatientProfile() {
               {/* Botones de Acción */}
               <div className="flex justify-end gap-3 pt-4 border-t border-module-border">
                 <Button
-                  variant="outline"
                   onClick={() => setEditMode(!editMode)}
-                  className="border-primary text-primary hover:bg-[#FBF9F6] hover:border-primary transition-colors"
+                  className="bg-primary hover:bg-[#FBF9F6] hover:text-primary text-primary-foreground border border-primary transition-colors"
                 >
                   {editMode ? "Cancelar" : "Editar Datos"}
                 </Button>
