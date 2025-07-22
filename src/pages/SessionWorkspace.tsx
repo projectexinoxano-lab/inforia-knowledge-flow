@@ -47,7 +47,7 @@ const SessionWorkspace = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Simple header with logo */}
+      {/* Header with INFORIA branding */}
       <header className="border-b border-module-border bg-background">
         <div className="container mx-auto px-6 py-4">
           <h1 className="font-serif text-2xl font-medium text-primary">iNFORiA</h1>
@@ -72,7 +72,6 @@ const SessionWorkspace = () => {
                 {!isRecording ? (
                   <Button 
                     onClick={handleStartRecording}
-                    className="bg-primary text-primary-foreground hover:bg-primary/90"
                   >
                     <Play className="mr-2 h-4 w-4" />
                     Empezar Grabación
@@ -169,7 +168,7 @@ const SessionWorkspace = () => {
             </Button>
             <Button 
               size="lg" 
-              className="h-12 px-8 text-base font-medium bg-primary text-primary-foreground hover:bg-primary/90"
+              className="h-12 px-8 text-base font-medium"
             >
               Generar Informe con IA
             </Button>
