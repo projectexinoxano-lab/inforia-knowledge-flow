@@ -18,6 +18,10 @@ export default {
 			}
 		},
 		extend: {
+			fontFamily: {
+				serif: ['Lora', 'serif'],
+				sans: ['Nunito Sans', 'sans-serif'],
+			},
 			colors: {
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',
@@ -52,15 +56,20 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
-				sidebar: {
-					DEFAULT: 'hsl(var(--sidebar-background))',
-					foreground: 'hsl(var(--sidebar-foreground))',
-					primary: 'hsl(var(--sidebar-primary))',
-					'primary-foreground': 'hsl(var(--sidebar-primary-foreground))',
-					accent: 'hsl(var(--sidebar-accent))',
-					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
-					border: 'hsl(var(--sidebar-border))',
-					ring: 'hsl(var(--sidebar-ring))'
+				/* iNFORiA Custom Colors */
+				calendar: {
+					today: 'hsl(var(--calendar-today))',
+					selected: 'hsl(var(--calendar-selected))',
+					hover: 'hsl(var(--calendar-hover))'
+				},
+				module: {
+					background: 'hsl(var(--module-background))',
+					border: 'hsl(var(--module-border))'
+				},
+				dropzone: {
+					border: 'hsl(var(--dropzone-border))',
+					background: 'hsl(var(--dropzone-background))',
+					active: 'hsl(var(--dropzone-active))'
 				}
 			},
 			borderRadius: {

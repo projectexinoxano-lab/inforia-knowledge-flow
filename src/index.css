@@ -2,57 +2,59 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
+/* iNFORiA Design System - Puesto de Mando Clínico
+Official Brand Colors and Typography for Psychologist Entrepreneurs
+All colors MUST be HSL for consistency.
 */
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* iNFORiA Brand Colors */
+    --background: 40 40% 98%; /* Off-White #FBF9F6 */
+    --foreground: 0 0% 20%; /* Graphite Gray #333333 */
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%; /* Pure white for cards */
+    --card-foreground: 0 0% 20%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 0 0% 20%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    /* Forest Green Primary (#2E403B) */
+    --primary: 155 17% 21%;
+    --primary-foreground: 0 0% 98%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    /* Calm secondary tones */
+    --secondary: 40 30% 95%;
+    --secondary-foreground: 0 0% 20%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 40 25% 93%;
+    --muted-foreground: 0 0% 45%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 155 17% 21%;
+    --accent-foreground: 0 0% 98%;
 
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 0 0% 98%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 40 15% 88%;
+    --input: 40 15% 88%;
+    --ring: 155 17% 21%;
 
-    --radius: 0.5rem;
+    --radius: 0.75rem; /* Rounded corners for modern feel */
 
-    --sidebar-background: 0 0% 98%;
+    /* Calendar specific colors */
+    --calendar-today: 155 25% 35%;
+    --calendar-selected: 155 17% 21%;
+    --calendar-hover: 155 10% 90%;
 
-    --sidebar-foreground: 240 5.3% 26.1%;
+    /* Module backgrounds */
+    --module-background: 0 0% 100%;
+    --module-border: 40 15% 90%;
 
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    /* Dropzone colors */
+    --dropzone-border: 155 15% 75%;
+    --dropzone-background: 155 5% 97%;
+    --dropzone-active: 155 25% 92%;
   }
 
   .dark {
@@ -100,6 +102,43 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans;
+  }
+
+  /* Typography System */
+  .font-serif {
+    font-family: 'Lora', serif;
+  }
+
+  .font-sans {
+    font-family: 'Nunito Sans', sans-serif;
+  }
+
+  /* Module title styling */
+  .module-title {
+    @apply font-serif text-xl font-medium text-foreground;
+  }
+
+  /* Calm animations */
+  .transition-calm {
+    transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+  }
+
+  /* Custom scrollbar */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: hsl(var(--muted));
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground) / 0.3);
+    border-radius: 3px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.5);
   }
 }
