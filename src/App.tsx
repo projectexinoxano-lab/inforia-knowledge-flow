@@ -10,6 +10,7 @@ import SessionWorkspace from "./pages/SessionWorkspace";
 import PatientProfile from "./pages/PatientProfile";
 import PatientDetailedProfile from "./pages/PatientDetailedProfile";
 import MyAccount from "./pages/MyAccount";
+import FAQs from "./pages/FAQs";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +27,7 @@ const App = () => (
           <Route path="/patient-profile" element={<PatientProfile />} />
           <Route path="/patient-detailed-profile" element={<PatientDetailedProfile />} />
           <Route path="/my-account" element={<MyAccount />} />
+          <Route path="/faqs" element={<FAQs />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
