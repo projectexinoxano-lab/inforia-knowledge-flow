@@ -21,6 +21,12 @@ const PatientDetailedProfile = () => {
     notes: "Paciente colaborativa con buena evolución en el tratamiento de ansiedad generalizada."
   });
 
+  const [paymentData, setPaymentData] = useState([
+    { date: "15/07/2025", amount: "75€", method: "Transferencia", status: "Pagado" },
+    { date: "08/07/2025", amount: "75€", method: "Efectivo", status: "Pagado" },
+    { date: "01/07/2025", amount: "75€", method: "Tarjeta", status: "Pagado" }
+  ]);
+
   const handleSaveChanges = () => {
     setIsEditing(false);
     // TODO: Implement save logic
@@ -39,6 +45,13 @@ const PatientDetailedProfile = () => {
   const handleAcudirInforme = () => {
     // TODO: Implement acudir informe logic
     console.log("Acudir informe");
+  };
+
+  const handlePaymentChange = (index: number, field: string, value: string) => {
+    const updatedPayments = paymentData.map((payment, i) => 
+      i === index ? { ...payment, [field]: value } : payment
+    );
+    setPaymentData(updatedPayments);
   };
 
   return (
@@ -331,21 +344,66 @@ const PatientDetailedProfile = () => {
                   Historial de Pagos
                 </h3>
                 <div className="space-y-3">
-                  {[
-                    { date: "15/07/2025", amount: "75€", method: "Transferencia", status: "Pagado" },
-                    { date: "08/07/2025", amount: "75€", method: "Efectivo", status: "Pagado" },
-                    { date: "01/07/2025", amount: "75€", method: "Tarjeta", status: "Pagado" }
-                  ].map((payment, index) => (
+                  {paymentData.map((payment, index) => (
                     <div key={index} className="p-3 bg-muted/50 rounded-md border border-module-border">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="font-medium text-foreground">{payment.amount}</p>
-                          <p className="text-sm text-muted-foreground">{payment.date} - {payment.method}</p>
+                      {isEditing ? (
+                        <div className="space-y-3">
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <label className="text-xs font-medium text-muted-foreground block mb-1">
+                                Fecha
+                              </label>
+                              <Input 
+                                value={payment.date}
+                                onChange={(e) => handlePaymentChange(index, 'date', e.target.value)}
+                                className="text-sm"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-xs font-medium text-muted-foreground block mb-1">
+                                Importe
+                              </label>
+                              <Input 
+                                value={payment.amount}
+                                onChange={(e) => handlePaymentChange(index, 'amount', e.target.value)}
+                                className="text-sm"
+                              />
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <label className="text-xs font-medium text-muted-foreground block mb-1">
+                                Método
+                              </label>
+                              <Input 
+                                value={payment.method}
+                                onChange={(e) => handlePaymentChange(index, 'method', e.target.value)}
+                                className="text-sm"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-xs font-medium text-muted-foreground block mb-1">
+                                Estado
+                              </label>
+                              <Input 
+                                value={payment.status}
+                                onChange={(e) => handlePaymentChange(index, 'status', e.target.value)}
+                                className="text-sm"
+                              />
+                            </div>
+                          </div>
                         </div>
-                        <Badge variant="secondary" className="text-xs">
-                          {payment.status}
-                        </Badge>
-                      </div>
+                      ) : (
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-medium text-foreground">{payment.amount}</p>
+                            <p className="text-sm text-muted-foreground">{payment.date} - {payment.method}</p>
+                          </div>
+                          <Badge variant="secondary" className="text-xs">
+                            {payment.status}
+                          </Badge>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
