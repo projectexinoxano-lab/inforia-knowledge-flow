@@ -311,9 +311,14 @@ const PatientDetailedProfile = () => {
                     { date: "08/07/2025", title: "Evaluación Inicial", status: "Completado" },
                     { date: "01/07/2025", title: "Informe de Admisión", status: "Completado" }
                   ].map((report, index) => (
-                    <div key={index} className="p-3 bg-muted/50 rounded-md border border-module-border">
-                      <div className="flex items-center justify-between">
-                        <div>
+                    <Button 
+                      key={index} 
+                      variant="ghost" 
+                      className="w-full h-auto p-3 bg-muted/50 hover:bg-muted border border-module-border rounded-md justify-start"
+                      onClick={() => console.log(`Abriendo informe: ${report.title}`)}
+                    >
+                      <div className="flex items-center justify-between w-full">
+                        <div className="text-left">
                           <p className="font-medium text-foreground">{report.title}</p>
                           <p className="text-sm text-muted-foreground">{report.date}</p>
                         </div>
@@ -321,7 +326,7 @@ const PatientDetailedProfile = () => {
                           {report.status}
                         </Badge>
                       </div>
-                    </div>
+                    </Button>
                   ))}
                 </div>
               </div>
