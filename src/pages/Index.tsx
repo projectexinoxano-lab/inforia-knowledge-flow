@@ -1,7 +1,7 @@
-import MainDashboard from "@/components/MainDashboard";
+import PatientProfile from "./PatientProfile";
 
 const Index = () => {
-  return <MainDashboard />;
+  return <PatientProfile />;
 };
 
 export default Index;
