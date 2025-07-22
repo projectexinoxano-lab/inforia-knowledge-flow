@@ -1,8 +1,40 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Mic, Upload } from "lucide-react";
+import { Play, Square, Plus, Upload, FileAudio } from "lucide-react";
 
 const SessionWorkspace = () => {
+  const [isRecording, setIsRecording] = useState(false);
+  const [timer, setTimer] = useState("00:00");
+  const [notes, setNotes] = useState("");
+
+  const handleStartRecording = () => {
+    setIsRecording(true);
+    // TODO: Implement actual recording logic
+  };
+
+  const handleStopRecording = () => {
+    setIsRecording(false);
+    // TODO: Implement stop recording logic
+  };
+
+  const handleInsertTimestamp = () => {
+    const timestamp = `[${timer}] `;
+    const textarea = document.querySelector('textarea');
+    if (textarea) {
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const newNotes = notes.slice(0, start) + timestamp + notes.slice(end);
+      setNotes(newNotes);
+      
+      // Set cursor position after the timestamp
+      setTimeout(() => {
+        textarea.selectionStart = textarea.selectionEnd = start + timestamp.length;
+        textarea.focus();
+      }, 0);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {/* Simple header with logo */}
@@ -14,70 +46,102 @@ const SessionWorkspace = () => {
 
       {/* Main content - centered single column */}
       <main className="container mx-auto px-6 py-12 max-w-4xl">
-        <div className="space-y-12">
+        <div className="space-y-8">
           {/* Page Header - Context */}
           <div className="text-center">
-            <h1 className="font-serif text-3xl font-medium text-foreground mb-2">
-              Registrando Sesión para: Paz García
+            <h1 className="font-serif text-3xl font-medium text-foreground">
+              Registrando Sesión para: Paz García - 22 de julio de 2025
             </h1>
-            <p className="text-lg text-muted-foreground">
-              22 de julio de 2025, 10:00
-            </p>
           </div>
 
-          {/* Section 1: Voice Input */}
-          <section className="space-y-6">
-            <h2 className="font-serif text-2xl font-medium text-foreground">
-              1. Entrada de Voz
-            </h2>
-            
-            <div className="border-2 border-dashed border-dropzone-border bg-dropzone-background rounded-lg p-12">
-              <div className="flex flex-col items-center space-y-6">
-                <Button 
-                  size="lg" 
-                  className="h-14 px-8 text-base font-medium"
-                >
-                  <Mic className="mr-3 h-5 w-5" />
-                  Iniciar Grabación
-                </Button>
-                
-                <Button 
-                  variant="ghost" 
-                  className="text-muted-foreground hover:text-foreground"
-                >
-                  O subir archivo de audio
-                </Button>
+          {/* Unified Control Bar */}
+          <div className="bg-card border border-module-border rounded-lg p-6">
+            <div className="flex items-center justify-between">
+              {/* Recording Controls */}
+              <div className="flex items-center space-x-3">
+                {!isRecording ? (
+                  <Button 
+                    onClick={handleStartRecording}
+                    className="bg-primary text-primary-foreground hover:bg-primary/90"
+                  >
+                    <Play className="mr-2 h-4 w-4" />
+                    Empezar Grabación
+                  </Button>
+                ) : (
+                  <Button 
+                    onClick={handleStopRecording}
+                    variant="destructive"
+                  >
+                    <Square className="mr-2 h-4 w-4" />
+                    Parar
+                  </Button>
+                )}
               </div>
-            </div>
-          </section>
 
-          {/* Section 2: Notes Input */}
-          <section className="space-y-6">
-            <h2 className="font-serif text-2xl font-medium text-foreground">
-              2. Entrada de Notas
-            </h2>
-            
-            <div className="space-y-4">
-              <Textarea 
-                placeholder="Escriba sus notas de la sesión aquí..."
-                className="min-h-[200px] text-base resize-none"
-              />
-              
+              {/* Live Timer */}
+              <div className="text-center">
+                <div className="text-2xl font-mono font-bold text-foreground">
+                  {timer} / 60:00
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  {isRecording ? "Grabando..." : "Detenido"}
+                </div>
+              </div>
+
+              {/* Timestamp Action */}
               <Button 
-                variant="secondary" 
-                className="w-full sm:w-auto"
+                variant="secondary"
+                onClick={handleInsertTimestamp}
+                disabled={!isRecording}
               >
-                <Upload className="mr-2 h-4 w-4" />
-                Subir archivo de notas (PDF, DOCX, etc.)
+                <Plus className="mr-2 h-4 w-4" />
+                Insertar Timestamp en Notas
               </Button>
             </div>
-          </section>
+          </div>
 
-          {/* Final Action */}
-          <div className="flex justify-center pt-8">
+          {/* Session Notes Area */}
+          <div className="space-y-4">
+            <h2 className="font-serif text-xl font-medium text-foreground">
+              Notas de Sesión
+            </h2>
+            <Textarea 
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Escribe aquí tus notas. Usa el botón '+ Insertar Timestamp' para anclar una nota a un momento específico de la grabación."
+              className="min-h-[400px] text-base resize-none font-sans"
+            />
+          </div>
+
+          {/* Additional Files Section */}
+          <div className="space-y-4">
+            <h3 className="font-serif text-lg font-medium text-foreground">
+              Adjuntar Archivos Adicionales (Opcional)
+            </h3>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Button variant="secondary" className="flex-1 sm:flex-none">
+                <FileAudio className="mr-2 h-4 w-4" />
+                Subir archivo de audio
+              </Button>
+              <Button variant="secondary" className="flex-1 sm:flex-none">
+                <Upload className="mr-2 h-4 w-4" />
+                Subir archivo de notas
+              </Button>
+            </div>
+          </div>
+
+          {/* Final Action Buttons */}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center pt-8">
+            <Button 
+              variant="secondary"
+              size="lg" 
+              className="h-12 px-8 text-base font-medium"
+            >
+              Guardar Borrador
+            </Button>
             <Button 
               size="lg" 
-              className="h-14 px-12 text-lg font-medium"
+              className="h-12 px-8 text-base font-medium bg-primary text-primary-foreground hover:bg-primary/90"
             >
               Generar Informe con IA
             </Button>
