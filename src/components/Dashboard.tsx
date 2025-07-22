@@ -1,5 +1,5 @@
 import { Header } from "./Header";
-import { CalendarModule } from "./CalendarModule";
+import CalendarModule from "./CalendarModule";
 import { ReportModule } from "./ReportModule";
 import { SearchModule } from "./SearchModule";
 
