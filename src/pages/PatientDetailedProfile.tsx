@@ -10,7 +10,6 @@ import { Edit, Plus, FileText, Calendar, Trash2, User, Tag, FileSignature, Clock
 
 const PatientDetailedProfile = () => {
   const [isEditing, setIsEditing] = useState(false);
-  const [newTag, setNewTag] = useState("");
   const [patientData, setPatientData] = useState({
     name: "Paz García",
     phone: "+34 600 123 456",
@@ -56,12 +55,12 @@ const PatientDetailedProfile = () => {
   };
 
   const handleAddTag = () => {
-    if (newTag.trim() && !patientData.tags.includes(newTag.trim())) {
+    const newTagName = prompt("Escribe la nueva etiqueta:");
+    if (newTagName && newTagName.trim() && !patientData.tags.includes(newTagName.trim())) {
       setPatientData({
         ...patientData,
-        tags: [...patientData.tags, newTag.trim()]
+        tags: [...patientData.tags, newTagName.trim()]
       });
-      setNewTag("");
     }
   };
 
@@ -264,22 +263,9 @@ const PatientDetailedProfile = () => {
                     </Badge>
                   ))}
                   {isEditing && (
-                    <div className="flex items-center gap-2">
-                      <Input
-                        value={newTag}
-                        onChange={(e) => setNewTag(e.target.value)}
-                        placeholder="Nueva etiqueta"
-                        className="w-32 h-8 text-sm"
-                        onKeyPress={(e) => {
-                          if (e.key === 'Enter') {
-                            handleAddTag();
-                          }
-                        }}
-                      />
-                      <Button variant="outline" size="sm" onClick={handleAddTag}>
-                        <Plus className="h-3 w-3" />
-                      </Button>
-                    </div>
+                    <Button variant="outline" size="sm" onClick={handleAddTag}>
+                      <Plus className="h-3 w-3" />
+                    </Button>
                   )}
                 </div>
               </div>
