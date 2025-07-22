@@ -1,0 +1,222 @@
+import { useState } from "react";
+import { Header } from "@/components/Header";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Check, X } from "lucide-react";
+
+export default function PatientProfile() {
+  const [editMode, setEditMode] = useState(false);
+  const [patientData, setPatientData] = useState({
+    telefono: "+34 656 789 012",
+    telefonoEmergencia: "+34 911 234 567",
+    email: "paz.garcia@email.com",
+    direccion: "Calle Mayor 123, 3º B, 28001 Madrid",
+    fechaNacimiento: "15/03/1988",
+    sexo: "Femenino",
+    dni: "12345678A",
+    notasFijas: "Paciente con historial de ansiedad generalizada. Responde bien a técnicas de relajación. Prefiere citas matutinas."
+  });
+
+  const handleSave = () => {
+    setEditMode(false);
+    // Aquí iría la lógica para guardar los datos
+  };
+
+  const handleInputChange = (field: string, value: string) => {
+    setPatientData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const etiquetas = ["Ansiedad", "TOC", "Terapia Cognitiva"];
+  
+  const historialInformes = [
+    { fecha: "22/07/25", nombre: "Informe de Seguimiento" },
+    { fecha: "15/07/25", nombre: "Evaluación Inicial" },
+    { fecha: "08/07/25", nombre: "Informe de Progreso" },
+    { fecha: "01/07/25", nombre: "Informe de Admisión" }
+  ];
+
+  const historialPagos = [
+    { fecha: "22/07/25", estado: "Pagado", pagado: true },
+    { fecha: "15/07/25", estado: "Pagado", pagado: true },
+    { fecha: "08/07/25", estado: "Pendiente", pagado: false },
+    { fecha: "01/07/25", estado: "Pagado", pagado: true }
+  ];
+
+  return (
+    <div className="min-h-screen bg-background">
+      <Header />
+      
+      {/* Sub-Header */}
+      <div className="bg-card border-b border-module-border px-6 py-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <h1 className="text-xl font-serif font-semibold text-foreground">
+              Paz García
+            </h1>
+            <span className="text-muted-foreground font-sans">|</span>
+            <span className="text-muted-foreground font-sans text-sm">
+              Fecha de Alta: 01/07/2025
+            </span>
+          </div>
+          
+          <div className="flex items-center gap-3">
+            <Button 
+              size="lg" 
+              className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium"
+            >
+              + Redactar Nuevo Informe
+            </Button>
+            <Button variant="outline" size="lg" className="font-medium">
+              Generar Dosier de Alta
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="p-6">
+        <div className="grid grid-cols-2 gap-6 max-w-7xl mx-auto">
+          {/* Left Column - Datos del Paciente */}
+          <Card className="h-fit">
+            <CardHeader className="pb-4">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg font-serif">Datos del Paciente</CardTitle>
+                <Button
+                  variant={editMode ? "default" : "outline"}
+                  size="sm"
+                  onClick={editMode ? handleSave : () => setEditMode(true)}
+                  className={editMode ? "bg-primary hover:bg-primary/90 text-primary-foreground" : ""}
+                >
+                  {editMode ? "Guardar Cambios" : "Editar Datos"}
+                </Button>
+              </div>
+            </CardHeader>
+            
+            <CardContent className="space-y-6">
+              {/* Datos Fijos */}
+              <div>
+                <h3 className="font-serif font-medium text-foreground mb-4">Datos Fijos</h3>
+                <div className="space-y-3">
+                  {Object.entries({
+                    "Teléfono": "telefono",
+                    "Tel. Emergencia": "telefonoEmergencia", 
+                    "Email": "email",
+                    "Dirección": "direccion",
+                    "F. Nacimiento": "fechaNacimiento",
+                    "Sexo": "sexo",
+                    "DNI/ID": "dni"
+                  }).map(([label, field]) => (
+                    <div key={field} className="space-y-1">
+                      <Label className="text-sm font-medium text-muted-foreground">
+                        {label}:
+                      </Label>
+                      {editMode ? (
+                        <Input
+                          value={patientData[field as keyof typeof patientData]}
+                          onChange={(e) => handleInputChange(field, e.target.value)}
+                          className="h-8"
+                        />
+                      ) : (
+                        <p className="text-sm text-foreground font-sans">
+                          {patientData[field as keyof typeof patientData]}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Etiquetas */}
+              <div>
+                <h3 className="font-serif font-medium text-foreground mb-3">Etiquetas</h3>
+                <div className="flex flex-wrap gap-2">
+                  {etiquetas.map((etiqueta, index) => (
+                    <Badge 
+                      key={index} 
+                      variant="secondary"
+                      className="bg-primary/10 text-primary hover:bg-primary/20"
+                    >
+                      {etiqueta}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+
+              {/* Notas Fijas */}
+              <div>
+                <h3 className="font-serif font-medium text-foreground mb-3">Notas Fijas</h3>
+                {editMode ? (
+                  <Textarea
+                    value={patientData.notasFijas}
+                    onChange={(e) => handleInputChange("notasFijas", e.target.value)}
+                    className="min-h-[100px] resize-none"
+                  />
+                ) : (
+                  <p className="text-sm text-foreground font-sans leading-relaxed bg-muted/30 p-3 rounded-md">
+                    {patientData.notasFijas}
+                  </p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Right Column - Actividad */}
+          <div className="space-y-6">
+            {/* Historial de Informes */}
+            <Card>
+              <CardHeader className="pb-4">
+                <CardTitle className="text-lg font-serif">Historial de Informes</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3 max-h-64 overflow-y-auto">
+                  {historialInformes.map((informe, index) => (
+                    <div 
+                      key={index} 
+                      className="flex items-center justify-between p-3 bg-muted/30 rounded-md hover:bg-muted/50 transition-colors cursor-pointer"
+                    >
+                      <span className="font-sans text-sm text-foreground">
+                        <span className="font-medium">{informe.fecha}:</span> {informe.nombre}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Historial de Pagos */}
+            <Card>
+              <CardHeader className="pb-4">
+                <CardTitle className="text-lg font-serif">Historial de Pagos</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3 max-h-64 overflow-y-auto">
+                  {historialPagos.map((pago, index) => (
+                    <div 
+                      key={index} 
+                      className="flex items-center justify-between p-3 bg-muted/30 rounded-md"
+                    >
+                      <span className="font-sans text-sm text-foreground">
+                        <span className="font-medium">{pago.fecha}:</span> {pago.estado}
+                      </span>
+                      <div className="flex items-center">
+                        {pago.pagado ? (
+                          <Check className="h-4 w-4 text-green-600" />
+                        ) : (
+                          <X className="h-4 w-4 text-red-600" />
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
