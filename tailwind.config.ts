@@ -57,6 +57,14 @@ export default {
 					foreground: 'hsl(var(--card-foreground))'
 				},
 				/* iNFORiA Custom Colors */
+				inforia: {
+					DEFAULT: 'hsl(var(--inforia))',
+					foreground: 'hsl(var(--inforia-foreground))'
+				},
+				bone: {
+					DEFAULT: 'hsl(var(--bone))',
+					foreground: 'hsl(var(--bone-foreground))'
+				},
 				burgundy: {
 					DEFAULT: 'hsl(var(--burgundy))',
 					foreground: 'hsl(var(--burgundy-foreground))'

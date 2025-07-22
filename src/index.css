@@ -22,6 +22,12 @@ All colors MUST be HSL for consistency.
     /* Verde INFORIA (#2E403B) - HSL: 155, 17%, 21% */
     --primary: 155 17% 21%;
     --primary-foreground: 40 40% 98%; /* Blanco Hueso for text on green */
+    --inforia: 155 17% 21%; /* Verde INFORIA */
+    --inforia-foreground: 40 40% 98%;
+    
+    /* Blanco Hueso (#FBF9F6) - HSL: 40, 40%, 98% */
+    --bone: 40 40% 98%;
+    --bone-foreground: 155 17% 21%;
     
     /* Burdeos Acento (#800020) - HSL: 345, 100%, 25% */
     --burgundy: 345 100% 25%;
