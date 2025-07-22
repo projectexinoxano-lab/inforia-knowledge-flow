@@ -16,9 +16,10 @@ export default function PatientProfile() {
     email: "paz.garcia@email.com",
     direccion: "Calle Mayor 123, 3º B, 28001 Madrid",
     fechaNacimiento: "15/03/1988",
+    edad: "37 años",
     sexo: "Femenino",
     dni: "12345678A",
-    notasFijas: "Paciente con historial de ansiedad generalizada. Responde bien a técnicas de relajación. Prefiere citas matutinas."
+    notasFijas: "Paciente con historial de ansiedad generalizada. Responde bien a técnicas de relajación. Prefiere citas matutinas. Ha mostrado progreso significativo en las últimas sesiones. Importante mantener constancia en los ejercicios de respiración."
   });
 
   const handleSave = () => {
@@ -83,17 +84,7 @@ export default function PatientProfile() {
           {/* Left Column - Datos del Paciente */}
           <Card className="h-fit">
             <CardHeader className="pb-4">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-lg font-serif">Datos del Paciente</CardTitle>
-                <Button
-                  variant={editMode ? "default" : "outline"}
-                  size="sm"
-                  onClick={editMode ? handleSave : () => setEditMode(true)}
-                  className={editMode ? "bg-primary hover:bg-primary/90 text-primary-foreground" : ""}
-                >
-                  {editMode ? "Guardar Cambios" : "Editar Datos"}
-                </Button>
-              </div>
+              <CardTitle className="text-lg font-serif">Datos del Paciente</CardTitle>
             </CardHeader>
             
             <CardContent className="space-y-6">
@@ -107,6 +98,7 @@ export default function PatientProfile() {
                     "Email": "email",
                     "Dirección": "direccion",
                     "F. Nacimiento": "fechaNacimiento",
+                    "Edad": "edad",
                     "Sexo": "sexo",
                     "DNI/ID": "dni"
                   }).map(([label, field]) => (
@@ -130,9 +122,51 @@ export default function PatientProfile() {
                 </div>
               </div>
 
-              {/* Etiquetas */}
+              {/* Notas Fijas */}
               <div>
-                <h3 className="font-serif font-medium text-foreground mb-3">Etiquetas</h3>
+                <h3 className="font-serif font-medium text-foreground mb-3">Notas Fijas</h3>
+                {editMode ? (
+                  <Textarea
+                    value={patientData.notasFijas}
+                    onChange={(e) => handleInputChange("notasFijas", e.target.value)}
+                    className="min-h-[120px] resize-none"
+                  />
+                ) : (
+                  <p className="text-sm text-foreground font-sans leading-relaxed bg-muted/30 p-4 rounded-md min-h-[120px]">
+                    {patientData.notasFijas}
+                  </p>
+                )}
+              </div>
+
+              {/* Botones de Acción */}
+              <div className="flex justify-end gap-3 pt-4 border-t border-module-border">
+                <Button
+                  variant="outline"
+                  onClick={() => setEditMode(!editMode)}
+                  className="border-primary text-primary hover:bg-primary hover:text-primary-foreground"
+                >
+                  {editMode ? "Cancelar" : "Editar Datos"}
+                </Button>
+                {editMode && (
+                  <Button
+                    onClick={handleSave}
+                    className="bg-primary hover:bg-primary/90 text-primary-foreground"
+                  >
+                    Guardar Cambios
+                  </Button>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Right Column - Actividad */}
+          <div className="space-y-6">
+            {/* Etiquetas */}
+            <Card>
+              <CardHeader className="pb-4">
+                <CardTitle className="text-lg font-serif">Etiquetas</CardTitle>
+              </CardHeader>
+              <CardContent>
                 <div className="flex flex-wrap gap-2">
                   {etiquetas.map((etiqueta, index) => (
                     <Badge 
@@ -144,28 +178,8 @@ export default function PatientProfile() {
                     </Badge>
                   ))}
                 </div>
-              </div>
-
-              {/* Notas Fijas */}
-              <div>
-                <h3 className="font-serif font-medium text-foreground mb-3">Notas Fijas</h3>
-                {editMode ? (
-                  <Textarea
-                    value={patientData.notasFijas}
-                    onChange={(e) => handleInputChange("notasFijas", e.target.value)}
-                    className="min-h-[100px] resize-none"
-                  />
-                ) : (
-                  <p className="text-sm text-foreground font-sans leading-relaxed bg-muted/30 p-3 rounded-md">
-                    {patientData.notasFijas}
-                  </p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Right Column - Actividad */}
-          <div className="space-y-6">
+              </CardContent>
+            </Card>
             {/* Historial de Informes */}
             <Card>
               <CardHeader className="pb-4">
