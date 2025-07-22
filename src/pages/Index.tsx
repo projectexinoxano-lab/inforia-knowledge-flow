@@ -1,7 +1,7 @@
-import PatientProfile from "./PatientProfile";
+import SessionWorkspace from "./SessionWorkspace";
 
 const Index = () => {
-  return <PatientProfile />;
+  return <SessionWorkspace />;
 };
 
 export default Index;
