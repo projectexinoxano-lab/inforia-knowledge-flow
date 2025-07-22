@@ -9,9 +9,9 @@ All colors MUST be HSL for consistency.
 
 @layer base {
   :root {
-    /* iNFORiA Brand Colors */
-    --background: 40 40% 98%; /* Off-White #FBF9F6 */
-    --foreground: 0 0% 20%; /* Graphite Gray #333333 */
+    /* iNFORiA Brand Colors - Exact Match */
+    --background: 40 40% 98%; /* Blanco Hueso #FBF9F6 */
+    --foreground: 0 0% 20%; /* Gris Grafito #333333 */
 
     --card: 0 0% 100%; /* Pure white for cards */
     --card-foreground: 0 0% 20%;
@@ -19,13 +19,13 @@ All colors MUST be HSL for consistency.
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 20%;
 
-    /* Forest Green Primary (#2E403B) */
+    /* Verde INFORIA (#2E403B) - HSL: 155, 17%, 21% */
     --primary: 155 17% 21%;
-    --primary-foreground: 0 0% 98%;
+    --primary-foreground: 40 40% 98%; /* Blanco Hueso for text on green */
 
-    /* Calm secondary tones */
-    --secondary: 40 30% 95%;
-    --secondary-foreground: 0 0% 20%;
+    /* Secondary using Blanco Hueso background */
+    --secondary: 40 40% 96%;
+    --secondary-foreground: 155 17% 21%;
 
     --muted: 40 25% 93%;
     --muted-foreground: 0 0% 45%;
