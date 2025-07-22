@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 import {
   HoverCard,
   HoverCardContent,
@@ -18,6 +19,7 @@ interface CalendarDay {
 
 const CalendarModule = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
+  const navigate = useNavigate();
   
   const monthNames = [
     "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
@@ -67,6 +69,12 @@ const CalendarModule = () => {
       }
       return newDate;
     });
+  };
+
+  const handleDayClick = (day: number) => {
+    const selectedDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+    const dateParam = selectedDate.toISOString().split('T')[0]; // Format: YYYY-MM-DD
+    navigate(`/new-patient?date=${dateParam}`);
   };
 
   const days = getDaysInMonth(currentDate);
@@ -122,7 +130,10 @@ const CalendarModule = () => {
                 {day.hasAppointments && day.appointments ? (
                   <HoverCard>
                     <HoverCardTrigger asChild>
-                      <button className="w-full h-full flex items-center justify-center text-lg font-medium text-foreground hover:bg-calendar-hover rounded-lg transition-calm relative bg-background border-2 border-transparent hover:border-primary hover:shadow-lg">
+                      <button 
+                        onClick={() => handleDayClick(day.date)}
+                        className="w-full h-full flex items-center justify-center text-lg font-medium text-foreground hover:bg-calendar-hover rounded-lg transition-calm relative bg-background border-2 border-transparent hover:border-primary hover:shadow-lg"
+                      >
                         {day.date}
                         <div 
                           className="absolute top-2 right-2 w-3 h-3 rounded-full shadow-sm"
@@ -142,9 +153,12 @@ const CalendarModule = () => {
                     </HoverCardContent>
                   </HoverCard>
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-lg font-medium text-foreground hover:bg-calendar-hover rounded-lg transition-calm bg-background border-2 border-transparent hover:border-muted">
+                  <button 
+                    onClick={() => handleDayClick(day.date)}
+                    className="w-full h-full flex items-center justify-center text-lg font-medium text-foreground hover:bg-calendar-hover rounded-lg transition-calm bg-background border-2 border-transparent hover:border-muted"
+                  >
                     {day.date}
-                  </div>
+                  </button>
                 )}
               </>
             )}

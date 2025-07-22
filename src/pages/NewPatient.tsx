@@ -13,8 +13,9 @@ import { CalendarIcon, Plus, X, Save, FileText } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { useEffect } from "react";
 
 interface PatientData {
   firstName: string;
@@ -22,6 +23,8 @@ interface PatientData {
   email: string;
   phone: string;
   birthDate: Date | undefined;
+  appointmentDate: Date | undefined;
+  appointmentTime: string;
   gender: string;
   address: string;
   emergencyContact: string;
@@ -35,6 +38,7 @@ interface PatientData {
 const NewPatient = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
   
   const [patientData, setPatientData] = useState<PatientData>({
     firstName: "",
@@ -42,6 +46,8 @@ const NewPatient = () => {
     email: "",
     phone: "",
     birthDate: undefined,
+    appointmentDate: undefined,
+    appointmentTime: "",
     gender: "",
     address: "",
     emergencyContact: "",
@@ -54,6 +60,18 @@ const NewPatient = () => {
 
   const [newTag, setNewTag] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Read date parameter from URL and set appointment date
+  useEffect(() => {
+    const dateParam = searchParams.get('date');
+    if (dateParam) {
+      const selectedDate = new Date(dateParam);
+      setPatientData(prev => ({
+        ...prev,
+        appointmentDate: selectedDate
+      }));
+    }
+  }, [searchParams]);
 
   const handleInputChange = (field: keyof PatientData, value: string) => {
     setPatientData(prev => ({
@@ -251,6 +269,77 @@ const NewPatient = () => {
                     placeholder="Profesión del paciente"
                     className="font-sans"
                   />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Appointment Information */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="font-serif text-xl">Información de Cita</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="font-sans">Fecha de Cita</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-sans",
+                            !patientData.appointmentDate && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {patientData.appointmentDate ? (
+                            format(patientData.appointmentDate, "d 'de' MMMM 'de' yyyy", { locale: es })
+                          ) : (
+                            <span>Selecciona fecha de cita</span>
+                          )}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0">
+                        <Calendar
+                          mode="single"
+                          selected={patientData.appointmentDate}
+                          onSelect={(date) => setPatientData(prev => ({ ...prev, appointmentDate: date }))}
+                          initialFocus
+                          locale={es}
+                          className="p-3 pointer-events-auto"
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="appointmentTime" className="font-sans">Hora de Cita</Label>
+                    <Select onValueChange={(value) => handleInputChange("appointmentTime", value)}>
+                      <SelectTrigger className="font-sans">
+                        <SelectValue placeholder="Selecciona hora" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="09:00">09:00</SelectItem>
+                        <SelectItem value="09:30">09:30</SelectItem>
+                        <SelectItem value="10:00">10:00</SelectItem>
+                        <SelectItem value="10:30">10:30</SelectItem>
+                        <SelectItem value="11:00">11:00</SelectItem>
+                        <SelectItem value="11:30">11:30</SelectItem>
+                        <SelectItem value="12:00">12:00</SelectItem>
+                        <SelectItem value="12:30">12:30</SelectItem>
+                        <SelectItem value="13:00">13:00</SelectItem>
+                        <SelectItem value="16:00">16:00</SelectItem>
+                        <SelectItem value="16:30">16:30</SelectItem>
+                        <SelectItem value="17:00">17:00</SelectItem>
+                        <SelectItem value="17:30">17:30</SelectItem>
+                        <SelectItem value="18:00">18:00</SelectItem>
+                        <SelectItem value="18:30">18:30</SelectItem>
+                        <SelectItem value="19:00">19:00</SelectItem>
+                        <SelectItem value="19:30">19:30</SelectItem>
+                        <SelectItem value="20:00">20:00</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
               </CardContent>
             </Card>
