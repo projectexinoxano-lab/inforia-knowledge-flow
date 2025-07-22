@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Header } from "@/components/Header";
+import DashboardHeader from "@/components/DashboardHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -50,7 +50,7 @@ export default function PatientProfile() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
+      <DashboardHeader />
       
       {/* Sub-Header */}
       <div className="bg-card border-b border-module-border px-6 py-4">
