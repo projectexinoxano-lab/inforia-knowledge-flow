@@ -81,7 +81,7 @@ const PatientDetailedProfile = () => {
                 <Plus className="mr-2 h-4 w-4" />
                 Redactar Nuevo Informe
               </Button>
-              <Button variant="secondary">
+              <Button variant="inforia">
                 <FileText className="mr-2 h-4 w-4" />
                 Generar Dosier de Alta
               </Button>
