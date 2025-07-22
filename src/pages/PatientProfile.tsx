@@ -68,13 +68,13 @@ export default function PatientProfile() {
           <div className="flex items-center gap-3">
             <Button 
               size="lg" 
-              className="bg-primary hover:bg-[#FBF9F6] hover:text-primary text-primary-foreground font-medium border border-primary transition-colors"
+              className="bg-primary hover:bg-background hover:text-primary text-primary-foreground font-medium border border-primary transition-colors"
             >
               + Redactar Nuevo Informe
             </Button>
             <Button 
               size="lg" 
-              className="bg-primary hover:bg-[#FBF9F6] hover:text-primary text-primary-foreground font-medium border border-primary transition-colors"
+              className="bg-primary hover:bg-background hover:text-primary text-primary-foreground font-medium border border-primary transition-colors"
             >
               Generar Dosier de Alta
             </Button>
@@ -87,8 +87,25 @@ export default function PatientProfile() {
         <div className="grid grid-cols-2 gap-6 max-w-7xl mx-auto">
           {/* Left Column - Datos del Paciente */}
           <Card className="h-fit">
-            <CardHeader className="pb-4">
+            <CardHeader className="pb-4 flex flex-row justify-between items-center">
               <CardTitle className="text-lg font-serif">Datos del Paciente</CardTitle>
+              {/* Botones de Acción */}
+              <div className="flex gap-3">
+                <Button
+                  onClick={() => setEditMode(!editMode)}
+                  className="bg-primary hover:bg-background hover:text-primary text-primary-foreground border border-primary transition-colors"
+                >
+                  {editMode ? "Cancelar" : "Editar Datos"}
+                </Button>
+                {editMode && (
+                  <Button
+                    onClick={handleSave}
+                    className="bg-primary hover:bg-background hover:text-primary text-primary-foreground border border-primary transition-colors"
+                  >
+                    Guardar Cambios
+                  </Button>
+                )}
+              </div>
             </CardHeader>
             
             <CardContent className="space-y-6">
@@ -143,34 +160,18 @@ export default function PatientProfile() {
                 )}
               </div>
 
-              {/* Botones de Acción */}
-              <div className="flex justify-end gap-3 pt-4 border-t border-module-border">
-                <Button
-                  onClick={() => setEditMode(!editMode)}
-                  className="bg-primary hover:bg-[#FBF9F6] hover:text-primary text-primary-foreground border border-primary transition-colors"
-                >
-                  {editMode ? "Cancelar" : "Editar Datos"}
-                </Button>
-                {editMode && (
-                  <Button
-                    onClick={handleSave}
-                    className="bg-primary hover:bg-[#FBF9F6] hover:text-primary text-primary-foreground border border-primary transition-colors"
-                  >
-                    Guardar Cambios
-                  </Button>
-                )}
-              </div>
             </CardContent>
           </Card>
 
           {/* Right Column - Actividad */}
-          <div className="space-y-6">
-            {/* Etiquetas */}
-            <Card>
-              <CardHeader className="pb-4">
-                <CardTitle className="text-lg font-serif">Etiquetas</CardTitle>
-              </CardHeader>
-              <CardContent>
+          <Card>
+            <CardHeader className="pb-4">
+              <CardTitle className="text-lg font-serif">Actividad</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Etiquetas */}
+              <div>
+                <h3 className="text-base font-serif font-medium mb-3 text-foreground">Etiquetas</h3>
                 <div className="flex flex-wrap gap-2">
                   {etiquetas.map((etiqueta, index) => (
                     <Badge 
@@ -182,14 +183,11 @@ export default function PatientProfile() {
                     </Badge>
                   ))}
                 </div>
-              </CardContent>
-            </Card>
-            {/* Historial de Informes */}
-            <Card>
-              <CardHeader className="pb-4">
-                <CardTitle className="text-lg font-serif">Historial de Informes</CardTitle>
-              </CardHeader>
-              <CardContent>
+              </div>
+
+              {/* Historial de Informes */}
+              <div>
+                <h3 className="text-base font-serif font-medium mb-3 text-foreground">Historial de Informes</h3>
                 <div className="space-y-3 max-h-64 overflow-y-auto">
                   {historialInformes.map((informe, index) => (
                     <div 
@@ -202,15 +200,11 @@ export default function PatientProfile() {
                     </div>
                   ))}
                 </div>
-              </CardContent>
-            </Card>
+              </div>
 
-            {/* Historial de Pagos */}
-            <Card>
-              <CardHeader className="pb-4">
-                <CardTitle className="text-lg font-serif">Historial de Pagos</CardTitle>
-              </CardHeader>
-              <CardContent>
+              {/* Historial de Pagos */}
+              <div>
+                <h3 className="text-base font-serif font-medium mb-3 text-foreground">Historial de Pagos</h3>
                 <div className="space-y-3 max-h-64 overflow-y-auto">
                   {historialPagos.map((pago, index) => (
                     <div 
@@ -230,9 +224,9 @@ export default function PatientProfile() {
                     </div>
                   ))}
                 </div>
-              </CardContent>
-            </Card>
-          </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
