@@ -1,4 +1,4 @@
-import { Search, Menu, User } from "lucide-react";
+import { Search, MoreVertical, UserCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -38,8 +38,8 @@ const Header = () => {
             {/* Dropdown Menu */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon">
-                  <Menu className="h-5 w-5" />
+                <Button variant="ghost" size="icon" className="hover:bg-secondary">
+                  <MoreVertical className="h-5 w-5" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
@@ -54,10 +54,10 @@ const Header = () => {
             {/* Profile Avatar */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="rounded-full">
+                <Button variant="ghost" size="icon" className="rounded-full hover:bg-secondary">
                   <Avatar className="h-8 w-8">
-                    <AvatarFallback>
-                      <User className="h-4 w-4" />
+                    <AvatarFallback className="bg-primary/10">
+                      <UserCircle className="h-5 w-5 text-primary" />
                     </AvatarFallback>
                   </Avatar>
                 </Button>

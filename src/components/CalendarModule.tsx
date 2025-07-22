@@ -30,7 +30,7 @@ const CalendarModule = () => {
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
     const daysInMonth = lastDay.getDate();
-    const startingDayOfWeek = firstDay.getDay();
+    const startingDayOfWeek = (firstDay.getDay() + 6) % 7; // Ajuste para que lunes sea 0
 
     const days: CalendarDay[] = [];
 
@@ -70,7 +70,7 @@ const CalendarModule = () => {
   };
 
   const days = getDaysInMonth(currentDate);
-  const weekDays = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+  const weekDays = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
 
   return (
     <div className="bg-card rounded-lg border border-module-border p-8 w-full h-full">

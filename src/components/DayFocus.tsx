@@ -107,7 +107,7 @@ const DayFocus = () => {
               </div>
 
               {/* Action Button */}
-              <Button size="lg" className="font-medium px-6 py-3">
+              <Button size="lg" className="font-medium px-6 py-3 bg-primary hover:bg-primary/90 text-primary-foreground">
                 Registrar Sesión
               </Button>
             </div>
