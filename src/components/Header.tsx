@@ -18,10 +18,7 @@ export const Header = () => {
       {/* Logo e Identidad de Marca */}
       <div className="flex items-center space-x-4">
         <Link to="/" className="hover:opacity-80 transition-calm">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-              <span className="text-primary-foreground font-serif text-lg font-bold">i</span>
-            </div>
+          <div className="flex items-center">
             <h1 className="text-3xl font-serif font-medium text-primary tracking-tight">
               iNFORiA
             </h1>
