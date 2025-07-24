@@ -147,7 +147,13 @@ const CalendarModule = () => {
                         <h4 className="font-semibold text-sm text-foreground mb-2">Citas del día</h4>
                         {day.appointments.map((appointment, idx) => (
                           <div key={idx} className="text-sm p-2 bg-background rounded border">
-                            <span className="font-medium text-primary">{appointment.time}</span> - {appointment.patientName}
+                            <span className="font-medium text-primary">{appointment.time}</span> - 
+                            <button 
+                              onClick={() => navigate('/patient-detailed-profile')}
+                              className="text-foreground hover:text-primary hover:underline transition-colors ml-1"
+                            >
+                              {appointment.patientName}
+                            </button>
                           </div>
                         ))}
                       </div>
