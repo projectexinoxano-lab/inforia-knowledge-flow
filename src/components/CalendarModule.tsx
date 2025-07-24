@@ -82,50 +82,50 @@ const CalendarModule = () => {
   const weekDays = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
 
   return (
-    <div className="bg-card rounded-lg border border-module-border p-8 w-full h-full">
+    <div className="bg-card rounded-lg border border-module-border p-4 w-full h-full flex flex-col">
       {/* Title */}
-      <h3 className="font-serif text-2xl font-medium text-foreground mb-6 text-center">
+      <h3 className="font-serif text-lg font-medium text-foreground mb-4 text-center">
         Calendario
       </h3>
 
       {/* Month Navigation */}
-      <div className="flex items-center justify-between mb-6 bg-background rounded-lg p-4">
+      <div className="flex items-center justify-between mb-4 bg-background rounded-lg p-3">
         <Button
           variant="ghost"
-          size="lg"
+          size="sm"
           onClick={() => navigateMonth("prev")}
-          className="h-12 w-12 hover:bg-primary hover:text-primary-foreground"
+          className="h-8 w-8 hover:bg-primary hover:text-primary-foreground"
         >
-          <ChevronLeft className="h-6 w-6" />
+          <ChevronLeft className="h-4 w-4" />
         </Button>
         
-        <span className="text-xl font-semibold text-foreground px-4">
+        <span className="text-sm font-semibold text-foreground px-2">
           {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
         </span>
         
         <Button
           variant="ghost"
-          size="lg"
+          size="sm"
           onClick={() => navigateMonth("next")}
-          className="h-12 w-12 hover:bg-primary hover:text-primary-foreground"
+          className="h-8 w-8 hover:bg-primary hover:text-primary-foreground"
         >
-          <ChevronRight className="h-6 w-6" />
+          <ChevronRight className="h-4 w-4" />
         </Button>
       </div>
 
       {/* Week Days Header */}
-      <div className="grid grid-cols-7 gap-2 mb-4">
+      <div className="grid grid-cols-7 gap-1 mb-3">
         {weekDays.map((day) => (
-          <div key={day} className="text-center text-base font-semibold text-primary py-3 bg-background rounded-lg">
+          <div key={day} className="text-center text-xs font-semibold text-primary py-2 bg-background rounded">
             {day}
           </div>
         ))}
       </div>
 
       {/* Calendar Grid */}
-      <div className="grid grid-cols-7 gap-2 flex-1">
+      <div className="grid grid-cols-7 gap-1 flex-1">
         {days.map((day, index) => (
-          <div key={index} className="aspect-square flex items-center justify-center relative min-h-[60px]">
+          <div key={index} className="aspect-square flex items-center justify-center relative min-h-[32px]">
             {day.date > 0 && (
               <>
                 {day.hasAppointments && day.appointments ? (
@@ -133,20 +133,19 @@ const CalendarModule = () => {
                     <HoverCardTrigger asChild>
                       <button 
                         onClick={() => handleDayClick(day.date)}
-                        className="w-full h-full flex items-center justify-center text-lg font-medium text-foreground hover:bg-calendar-hover rounded-lg transition-calm relative bg-background border-2 border-transparent hover:border-primary hover:shadow-lg"
+                        className="w-full h-full flex items-center justify-center text-sm font-medium text-foreground hover:bg-calendar-hover rounded transition-calm relative bg-background border border-transparent hover:border-primary"
                       >
                         {day.date}
                         <div 
-                          className="absolute top-2 right-2 w-3 h-3 rounded-full shadow-sm"
-                          style={{ backgroundColor: "#800020" }}
+                          className="absolute top-1 right-1 w-2 h-2 rounded-full shadow-sm bg-burgundy"
                         />
                       </button>
                     </HoverCardTrigger>
-                    <HoverCardContent className="w-auto p-4" side="top">
+                    <HoverCardContent className="w-auto p-3" side="top">
                       <div className="space-y-2">
-                        <h4 className="font-semibold text-sm text-foreground mb-2">Citas del día</h4>
+                        <h4 className="font-semibold text-xs text-foreground mb-2">Citas del día</h4>
                         {day.appointments.map((appointment, idx) => (
-                          <div key={idx} className="text-sm p-2 bg-background rounded border">
+                          <div key={idx} className="text-xs p-2 bg-background rounded border">
                             <span className="font-medium text-primary">{appointment.time}</span> - 
                             <button 
                               onClick={() => navigate('/patient-detailed-profile')}
@@ -162,7 +161,7 @@ const CalendarModule = () => {
                 ) : (
                   <button 
                     onClick={() => handleDayClick(day.date)}
-                    className="w-full h-full flex items-center justify-center text-lg font-medium text-foreground hover:bg-calendar-hover rounded-lg transition-calm bg-background border-2 border-transparent hover:border-muted"
+                    className="w-full h-full flex items-center justify-center text-sm font-medium text-foreground hover:bg-calendar-hover rounded transition-calm bg-background border border-transparent hover:border-muted"
                   >
                     {day.date}
                   </button>

@@ -63,13 +63,13 @@ const DayFocus = () => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "Pendiente":
-        return "bg-yellow-400";
+        return "bg-gold"; // Dorado Premium para citas pendientes
       case "En Curso":
-        return "bg-blue-400";
+        return "bg-burgundy"; // Burdeos Acento para citas en curso
       case "Completada":
-        return "bg-green-400";
+        return "bg-primary"; // Verde INFORIA para citas completadas
       default:
-        return "bg-gray-400";
+        return "bg-muted-foreground";
     }
   };
 
