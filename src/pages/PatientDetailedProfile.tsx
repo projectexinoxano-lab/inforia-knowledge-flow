@@ -124,6 +124,7 @@ const PatientDetailedProfile = () => {
                     variant="secondary" 
                     size="sm"
                     onClick={() => setIsEditing(true)}
+                    className="hover:bg-bone hover:text-primary"
                   >
                     <Edit className="mr-2 h-4 w-4" />
                     Editar Datos
