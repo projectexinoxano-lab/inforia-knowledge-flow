@@ -14,7 +14,63 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          activo: boolean
+          ciudad: string | null
+          codigo_postal: string | null
+          created_at: string
+          direccion: string | null
+          email: string
+          especialidad: string | null
+          fecha_renovacion: string | null
+          id: string
+          informes_restantes: number
+          nombre_completo: string | null
+          numero_colegiado: string | null
+          plan_actual: string
+          telefono: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          activo?: boolean
+          ciudad?: string | null
+          codigo_postal?: string | null
+          created_at?: string
+          direccion?: string | null
+          email: string
+          especialidad?: string | null
+          fecha_renovacion?: string | null
+          id?: string
+          informes_restantes?: number
+          nombre_completo?: string | null
+          numero_colegiado?: string | null
+          plan_actual?: string
+          telefono?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          activo?: boolean
+          ciudad?: string | null
+          codigo_postal?: string | null
+          created_at?: string
+          direccion?: string | null
+          email?: string
+          especialidad?: string | null
+          fecha_renovacion?: string | null
+          id?: string
+          informes_restantes?: number
+          nombre_completo?: string | null
+          numero_colegiado?: string | null
+          plan_actual?: string
+          telefono?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
