@@ -79,31 +79,11 @@ export const Header = () => {
                 Nuevo Paciente
               </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem className="font-sans cursor-pointer">
-              <FileText className="mr-3 h-4 w-4" />
-              Informes Recientes
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="font-sans cursor-pointer" asChild>
-              <Link to="/my-account" className="w-full flex items-center">
-                <User className="mr-3 h-4 w-4" />
-                Mi Cuenta
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem className="font-sans cursor-pointer">
-              <Settings className="mr-3 h-4 w-4" />
-              Configuración
-            </DropdownMenuItem>
             <DropdownMenuItem className="font-sans cursor-pointer" asChild>
               <Link to="/faqs" className="w-full flex items-center">
                 <HelpCircle className="mr-3 h-4 w-4" />
-                Centro de Ayuda
+                FAQs
               </Link>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="font-sans cursor-pointer text-burgundy hover:text-burgundy-foreground hover:bg-burgundy">
-              <LogOut className="mr-3 h-4 w-4" />
-              Cerrar Sesión
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
