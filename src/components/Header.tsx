@@ -24,11 +24,6 @@ export const Header = () => {
             </h1>
           </div>
         </Link>
-        <div className="hidden md:block">
-          <p className="text-sm text-muted-foreground font-sans">
-            Asistente Clínico y de Negocio
-          </p>
-        </div>
       </div>
 
       {/* Barra de Búsqueda Global */}
