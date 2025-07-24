@@ -39,21 +39,6 @@ export const Header = () => {
 
       {/* Navegación y Perfil */}
       <div className="flex items-center space-x-4">
-        {/* Accesos Rápidos */}
-        <div className="hidden lg:flex items-center space-x-2">
-          <Button variant="ghost" size="sm" asChild className="text-muted-foreground hover:text-primary transition-calm">
-            <Link to="/patient-list">
-              <Users className="h-4 w-4 mr-2" />
-              Pacientes
-            </Link>
-          </Button>
-          <Button variant="ghost" size="sm" asChild className="text-muted-foreground hover:text-primary transition-calm">
-            <Link to="/new-patient">
-              <Plus className="h-4 w-4 mr-2" />
-              Nuevo
-            </Link>
-          </Button>
-        </div>
 
         {/* Menú de Usuario */}
         <DropdownMenu>
@@ -86,6 +71,12 @@ export const Header = () => {
               <Link to="/patient-list" className="w-full flex items-center">
                 <Users className="mr-3 h-4 w-4" />
                 Mis Pacientes
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem className="font-sans cursor-pointer" asChild>
+              <Link to="/new-patient" className="w-full flex items-center">
+                <Plus className="mr-3 h-4 w-4" />
+                Nuevo Paciente
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem className="font-sans cursor-pointer">
