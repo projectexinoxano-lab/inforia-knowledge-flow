@@ -7,70 +7,14 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "12.2.12 (cd3cf9e)"
+    PostgrestVersion: "13.0.4"
   }
   public: {
     Tables: {
-      profiles: {
-        Row: {
-          activo: boolean
-          ciudad: string | null
-          codigo_postal: string | null
-          created_at: string
-          direccion: string | null
-          email: string
-          especialidad: string | null
-          fecha_renovacion: string | null
-          id: string
-          informes_restantes: number
-          nombre_completo: string | null
-          numero_colegiado: string | null
-          plan_actual: string
-          telefono: string | null
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          activo?: boolean
-          ciudad?: string | null
-          codigo_postal?: string | null
-          created_at?: string
-          direccion?: string | null
-          email: string
-          especialidad?: string | null
-          fecha_renovacion?: string | null
-          id?: string
-          informes_restantes?: number
-          nombre_completo?: string | null
-          numero_colegiado?: string | null
-          plan_actual?: string
-          telefono?: string | null
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          activo?: boolean
-          ciudad?: string | null
-          codigo_postal?: string | null
-          created_at?: string
-          direccion?: string | null
-          email?: string
-          especialidad?: string | null
-          fecha_renovacion?: string | null
-          id?: string
-          informes_restantes?: number
-          nombre_completo?: string | null
-          numero_colegiado?: string | null
-          plan_actual?: string
-          telefono?: string | null
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Views: {
       [_ in never]: never
