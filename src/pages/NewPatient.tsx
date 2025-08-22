@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { NavigationHeader } from "@/components/NavigationHeader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,13 +9,14 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, Plus, X, Save, FileText } from "lucide-react";
+import { CalendarIcon, Plus, X, Save, FileText, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import { useEffect } from "react";
+import { useCreatePatient } from "@/hooks/usePatients";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface PatientData {
   firstName: string;
@@ -39,6 +40,8 @@ const NewPatient = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
+  const { user } = useAuth();
+  const createPatientMutation = useCreatePatient();
   
   const [patientData, setPatientData] = useState<PatientData>({
     firstName: "",
@@ -100,33 +103,73 @@ const NewPatient = () => {
   };
 
   const handleSavePatient = async () => {
-    setIsSubmitting(true);
-    
-    // Mock save operation
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    toast({
-      title: "Paciente guardado",
-      description: `La ficha de ${patientData.firstName} ${patientData.lastName} ha sido creada exitosamente.`,
-    });
-    
-    setIsSubmitting(false);
-    navigate("/patient-list");
+    if (!user?.id) {
+      toast({
+        title: "Error",
+        description: "Debes estar autenticado para crear un paciente",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!isFormValid) {
+      toast({
+        title: "Faltan datos",
+        description: "Por favor completa todos los campos obligatorios marcados con *",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      await createPatientMutation.mutateAsync({
+        user_id: user.id,
+        name: `${patientData.firstName} ${patientData.lastName}`,
+        email: patientData.email || null,
+        phone: patientData.phone || null,
+        birth_date: patientData.birthDate ? format(patientData.birthDate, 'yyyy-MM-dd') : null,
+        notes: patientData.notes || null
+      });
+
+      navigate("/patient-list");
+    } catch (error) {
+      console.error('Error creating patient:', error);
+    }
   };
 
   const handleSaveAndCreateReport = async () => {
-    setIsSubmitting(true);
-    
-    // Mock save operation
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    toast({
-      title: "Paciente guardado",
-      description: `Ficha creada. Redirigiendo al espacio de trabajo...`,
-    });
-    
-    setIsSubmitting(false);
-    navigate("/session-workspace?newPatient=true");
+    if (!user?.id) {
+      toast({
+        title: "Error",
+        description: "Debes estar autenticado para crear un paciente",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!isFormValid) {
+      toast({
+        title: "Faltan datos",
+        description: "Por favor completa todos los campos obligatorios marcados con *",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      const newPatient = await createPatientMutation.mutateAsync({
+        user_id: user.id,
+        name: `${patientData.firstName} ${patientData.lastName}`,
+        email: patientData.email || null,
+        phone: patientData.phone || null,
+        birth_date: patientData.birthDate ? format(patientData.birthDate, 'yyyy-MM-dd') : null,
+        notes: patientData.notes || null
+      });
+
+      navigate(`/session-workspace?patientId=${newPatient.id}`);
+    } catch (error) {
+      console.error('Error creating patient:', error);
+    }
   };
 
   const isFormValid = patientData.firstName && patientData.lastName && patientData.email && patientData.phone && patientData.gender && patientData.birthDate;
@@ -451,22 +494,39 @@ const NewPatient = () => {
               <CardContent className="space-y-3">
                 <Button
                   onClick={handleSaveAndCreateReport}
-                  disabled={!isFormValid || isSubmitting}
-                  variant="inforia"
-                  className="w-full font-sans"
+                  disabled={!isFormValid || createPatientMutation.isPending}
+                  className="w-full font-sans bg-primary hover:bg-primary/90 text-primary-foreground"
                 >
-                  <FileText className="mr-2 h-4 w-4" />
-                  {isSubmitting ? "Guardando..." : "Guardar y Crear 1er Informe"}
+                  {createPatientMutation.isPending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Guardando...
+                    </>
+                  ) : (
+                    <>
+                      <FileText className="mr-2 h-4 w-4" />
+                      Guardar y Crear 1er Informe
+                    </>
+                  )}
                 </Button>
                 
                 <Button
                   onClick={handleSavePatient}
                   variant="outline"
-                  disabled={!isFormValid || isSubmitting}
+                  disabled={!isFormValid || createPatientMutation.isPending}
                   className="w-full font-sans"
                 >
-                  <Save className="mr-2 h-4 w-4" />
-                  Solo Guardar Ficha
+                  {createPatientMutation.isPending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Guardando...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="mr-2 h-4 w-4" />
+                      Solo Guardar Ficha
+                    </>
+                  )}
                 </Button>
               </CardContent>
             </Card>
