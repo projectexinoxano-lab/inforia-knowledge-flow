@@ -1,136 +1,156 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Clock } from "lucide-react";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Calendar, Clock, MapPin, Plus, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
-
-interface Appointment {
-  id: string;
-  time: string;
-  patientName: string;
-  status: "Pendiente" | "Completada" | "En Curso";
-}
-
-const mockAppointments: Appointment[] = [
-  {
-    id: "1",
-    time: "09:00",
-    patientName: "Carmen López",
-    status: "Pendiente"
-  },
-  {
-    id: "2",
-    time: "10:00",
-    patientName: "Paz García",
-    status: "Pendiente"
-  },
-  {
-    id: "3", 
-    time: "12:30",
-    patientName: "Marcos Alonso",
-    status: "Pendiente"
-  },
-  {
-    id: "4",
-    time: "14:00",
-    patientName: "Ana Martínez",
-    status: "Pendiente"
-  },
-  {
-    id: "5",
-    time: "16:00", 
-    patientName: "Luis Rodríguez",
-    status: "Pendiente"
-  },
-  {
-    id: "6",
-    time: "17:30", 
-    patientName: "Sofia Hernández",
-    status: "Pendiente"
-  }
-];
-
-// Mostrar solo los primeros 5 pacientes
-const displayedAppointments = mockAppointments.slice(0, 5);
+import { usePatients } from "@/hooks/usePatients";
 
 const DayFocus = () => {
-  const currentDate = new Date().toLocaleDateString('es-ES', {
+  const { data: patients = [] } = usePatients();
+  
+  const today = new Date().toLocaleDateString('es-ES', {
     weekday: 'long',
-    day: 'numeric',
-    month: 'long'
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
   });
+
+  // Mock data for today's appointments - In real app, this would come from appointments/calendar API
+  const todayAppointments = patients.slice(0, 4).map((patient, index) => ({
+    id: patient.id,
+    time: ["09:30", "11:00", "14:30", "16:30"][index],
+    patient: patient.name,
+    type: index === 0 ? "Primera Visita" : "Seguimiento",
+    status: index % 2 === 0 ? "confirmed" : "pending",
+    patientId: patient.id
+  }));
+
+  const getInitials = (name: string) => {
+    return name.split(' ')
+      .map(n => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "Pendiente":
-        return "bg-gold"; // Dorado Premium para citas pendientes
-      case "En Curso":
-        return "bg-burgundy"; // Burdeos Acento para citas en curso
-      case "Completada":
-        return "bg-primary"; // Verde INFORIA para citas completadas
-      default:
-        return "bg-muted-foreground";
+      case 'confirmed': return 'bg-green-100 text-green-800 border-green-200';
+      case 'pending': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      default: return 'bg-muted text-muted-foreground';
+    }
+  };
+
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'confirmed': return 'Confirmada';
+      case 'pending': return 'Pendiente';
+      default: return 'Desconocido';
     }
   };
 
   return (
-    <div className="bg-card rounded-lg border border-module-border p-8 w-full max-w-4xl mx-auto">
-      {/* Title */}
-      <div className="text-center mb-8">
-        <h2 className="font-serif text-3xl font-medium text-foreground">
-          Foco del Día: {currentDate}
-        </h2>
-      </div>
+    <Card className="border-module-border bg-module-background">
+      <CardHeader className="pb-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="module-title flex items-center">
+              <Calendar className="mr-2 h-5 w-5 text-primary" />
+              Foco del Día
+            </CardTitle>
+            <p className="text-sm text-muted-foreground capitalize mt-1">
+              {today}
+            </p>
+          </div>
+          <Link to="/new-patient?date=2025-08-22">
+            <Button size="sm" className="shrink-0">
+              <Plus className="mr-2 h-4 w-4" />
+              Nueva Cita
+            </Button>
+          </Link>
+        </div>
+      </CardHeader>
 
-      {/* Appointments List */}
-      {displayedAppointments.length > 0 ? (
-        <div className="space-y-6">
-          {displayedAppointments.map((appointment) => (
-            <div 
-              key={appointment.id}
-              className="flex items-center justify-between p-6 bg-background rounded-lg border border-module-border transition-calm hover:shadow-md"
-            >
-              <div className="flex items-center space-x-4">
-                {/* Time */}
-                <div className="text-xl font-semibold text-foreground min-w-[70px]">
-                  {appointment.time}
+      <CardContent className="space-y-4">
+        {todayAppointments.length > 0 ? (
+          <>
+            {todayAppointments.map((appointment) => (
+              <div
+                key={appointment.id}
+                className="flex items-center space-x-4 p-4 rounded-lg bg-muted/30 hover:bg-muted/50 transition-calm border border-module-border group cursor-pointer"
+              >
+                <div className="flex items-center space-x-3 flex-1">
+                  <Avatar className="h-10 w-10">
+                    <AvatarFallback className="bg-primary/10 text-primary font-medium">
+                      {getInitials(appointment.patient)}
+                    </AvatarFallback>
+                  </Avatar>
+                  
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center space-x-2 mb-1">
+                      <h4 className="font-medium text-foreground">
+                        {appointment.patient}
+                      </h4>
+                      <Badge variant="outline" className={getStatusColor(appointment.status)}>
+                        {getStatusText(appointment.status)}
+                      </Badge>
+                    </div>
+                    
+                    <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+                      <div className="flex items-center space-x-1">
+                        <Clock className="h-4 w-4" />
+                        <span>{appointment.time}</span>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <MapPin className="h-4 w-4" />
+                        <span>{appointment.type}</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-
-                 {/* Patient Name */}
-                <Link 
-                  to={`/patient-detailed-profile?id=${appointment.id}`}
-                  className="text-xl text-foreground font-medium hover:text-primary transition-calm"
-                >
-                  {appointment.patientName}
-                </Link>
-
-                {/* Status Indicator */}
+                
                 <div className="flex items-center space-x-2">
-                  <div className={`w-3 h-3 rounded-full ${getStatusColor(appointment.status)}`} />
-                  <span className="text-sm text-muted-foreground">
-                    {appointment.status}
-                  </span>
+                  <Link to={`/session-workspace?patientId=${appointment.patientId}`}>
+                    <Button size="sm" variant="outline">
+                      Iniciar Sesión
+                    </Button>
+                  </Link>
+                  <Link to={`/patient-detailed-profile?id=${appointment.patientId}`}>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors cursor-pointer" />
+                  </Link>
                 </div>
               </div>
-
-              {/* Action Button */}
-              <Link to={`/session-workspace?appointmentId=${appointment.id}`}>
-                <Button size="lg" className="font-medium px-6 py-3 bg-primary hover:bg-primary/90 text-primary-foreground">
-                  Registrar Sesión
+            ))}
+            
+            <div className="pt-4 border-t border-module-border">
+              <Link to="/patient-list">
+                <Button variant="ghost" className="w-full justify-between hover:bg-muted/50">
+                  <span>Ver todos los pacientes</span>
+                  <ChevronRight className="h-4 w-4" />
                 </Button>
               </Link>
             </div>
-          ))}
-        </div>
-      ) : (
-        /* Empty State */
-        <div className="text-center py-12">
-          <p className="text-lg text-muted-foreground">
-            Hoy no tienes citas programadas. ¡Un día perfecto para planificar!
-          </p>
-        </div>
-      )}
-    </div>
+          </>
+        ) : (
+          <div className="text-center py-8">
+            <Calendar className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+            <h3 className="font-medium text-foreground mb-2">
+              No hay citas programadas para hoy
+            </h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              Aprovecha para ponerte al día con informes pendientes
+            </p>
+            <Link to="/new-patient">
+              <Button>
+                <Plus className="mr-2 h-4 w-4" />
+                Programar Cita
+              </Button>
+            </Link>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 };
 
