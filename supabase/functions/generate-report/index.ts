@@ -14,7 +14,7 @@ serve(async (req) => {
   }
 
   try {
-    const { patientId, sessionNotes, reportType = 'seguimiento' } = await req.json();
+    const { patientId, sessionNotes, reportType = 'seguimiento', reportId } = await req.json();
     
     if (!patientId || !sessionNotes) {
       return new Response(
@@ -53,6 +53,20 @@ serve(async (req) => {
       );
     }
 
+    // Calculate patient age from birth_date
+    let patientAge = 'No especificada';
+    if (patient.birth_date) {
+      const birthDate = new Date(patient.birth_date);
+      const today = new Date();
+      const age = today.getFullYear() - birthDate.getFullYear();
+      const monthDiff = today.getMonth() - birthDate.getMonth();
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+        patientAge = (age - 1).toString();
+      } else {
+        patientAge = age.toString();
+      }
+    }
+
     // Get patient's previous reports for context
     const { data: previousReports } = await supabase
       .from('reports')
@@ -69,13 +83,14 @@ serve(async (req) => {
       ).join('\n')}`;
     }
 
-    const systemPrompt = `Eres un asistente especializado en generar informes clínicos para psicólogos. 
+    const systemPrompt = `Eres un asistente especializado en generar informes clínicos para psicólogos profesionales.
 
 INFORMACIÓN DEL PACIENTE:
 - Nombre: ${patient.name}
-- Edad: ${patient.age} años
-- Motivo de consulta: ${patient.reason_for_consultation || 'No especificado'}
-- Diagnóstico: ${patient.diagnosis || 'En evaluación'}
+- Edad: ${patientAge} años
+- Email: ${patient.email || 'No proporcionado'}
+- Teléfono: ${patient.phone || 'No proporcionado'}
+- Notas del profesional: ${patient.notes || 'Sin notas adicionales'}
 ${contextPrompt}
 
 INSTRUCCIONES:
@@ -138,16 +153,14 @@ Por favor genera el informe clínico basado en estas notas.`;
       );
     }
 
-    // Save report to database
+    // Update the existing report with generated content
     const { data: savedReport, error: saveError } = await supabase
       .from('reports')
-      .insert({
-        patient_id: patientId,
-        type: reportType,
+      .update({
         content: generatedReport,
-        session_notes: sessionNotes,
-        created_by: req.headers.get('authorization')?.split(' ')[1] // Get user ID from JWT
+        status: 'completed'
       })
+      .eq('id', reportId)
       .select()
       .single();
 

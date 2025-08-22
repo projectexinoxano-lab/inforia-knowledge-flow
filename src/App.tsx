@@ -6,7 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
-import Index from "./pages/Index";
+import MainDashboard from "./components/MainDashboard";
 import Auth from "./pages/Auth";
 import SessionWorkspace from "./pages/SessionWorkspace";
 import PatientDetailedProfile from "./pages/PatientDetailedProfile";
@@ -38,7 +38,7 @@ function AppRoutes() {
       <Route path="/auth" element={<Auth />} />
       <Route path="/" element={
         <ProtectedRoute>
-          <Index />
+          <MainDashboard />
         </ProtectedRoute>
       } />
       <Route path="/session-workspace" element={
