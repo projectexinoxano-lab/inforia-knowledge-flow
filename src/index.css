@@ -9,59 +9,67 @@ All colors MUST be HSL for consistency.
 
 @layer base {
   :root {
-    /* iNFORiA Brand Colors - Official Palette */
-    --background: 40 40% 98%; /* Blanco Hueso #FBF9F6 */
-    --foreground: 0 0% 20%; /* Gris Grafito #333333 */
+    /* INFORIA Brand Colors - Exact Specifications */
+    /* Verde INFORIA (#2E403B) - Primary Brand Color */
+    --inforia-green: 155 17% 21%;
+    /* Burdeos Acento (#800020) - CTA and Highlights */  
+    --inforia-burgundy: 345 100% 25%;
+    /* Dorado Premium (#D4AF37) - Success States */
+    --inforia-gold: 43 74% 49%;
+    /* Blanco Hueso (#FBF9F6) - Backgrounds */
+    --inforia-cream: 40 40% 98%;
+    /* Gris Grafito (#333333) - Text */
+    --inforia-graphite: 0 0% 20%;
+
+    /* Semantic Color Mapping */
+    --background: var(--inforia-cream); /* Blanco Hueso background */
+    --foreground: var(--inforia-graphite); /* Gris Grafito text */
 
     --card: 0 0% 100%; /* Pure white for cards */
-    --card-foreground: 0 0% 20%;
+    --card-foreground: var(--inforia-graphite);
 
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 20%;
+    --popover-foreground: var(--inforia-graphite);
 
-    /* Verde INFORIA (#2E403B) - HSL: 155, 17%, 21% */
-    --primary: 155 17% 21%;
-    --primary-foreground: 40 40% 98%; /* Blanco Hueso for text on green */
-    --inforia: 155 17% 21%; /* Verde INFORIA */
-    --inforia-foreground: 40 40% 98%;
+    /* Primary uses Verde INFORIA */
+    --primary: var(--inforia-green);
+    --primary-foreground: var(--inforia-cream);
     
-    /* Blanco Hueso (#FBF9F6) - HSL: 40, 40%, 98% */
-    --bone: 40 40% 98%;
-    --bone-foreground: 155 17% 21%;
-    
-    /* Burdeos Acento (#800020) - HSL: 345, 100%, 25% */
-    --burgundy: 345 100% 25%;
-    --burgundy-foreground: 40 40% 98%;
-    
-    /* Dorado Premium (#D4AF37) - HSL: 43, 74%, 49% */
-    --gold: 43 74% 49%;
-    --gold-foreground: 0 0% 20%;
+    /* Legacy support - mapping to new brand colors */
+    --inforia: var(--inforia-green);
+    --inforia-foreground: var(--inforia-cream);
+    --bone: var(--inforia-cream);
+    --bone-foreground: var(--inforia-green);
+    --burgundy: var(--inforia-burgundy);
+    --burgundy-foreground: var(--inforia-cream);
+    --gold: var(--inforia-gold);
+    --gold-foreground: var(--inforia-graphite);
 
-    /* Secondary using Blanco Hueso background */
-    --secondary: 40 40% 96%;
-    --secondary-foreground: 155 17% 21%;
+    /* Secondary using muted cream */
+    --secondary: 40 30% 95%;
+    --secondary-foreground: var(--inforia-green);
 
     --muted: 40 25% 93%;
     --muted-foreground: 0 0% 45%;
 
-    --accent: 155 17% 21%;
-    --accent-foreground: 0 0% 98%;
+    --accent: var(--inforia-green);
+    --accent-foreground: var(--inforia-cream);
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: var(--inforia-cream);
 
     --border: 40 15% 88%;
     --input: 40 15% 88%;
-    --ring: 155 17% 21%;
+    --ring: var(--inforia-green);
 
-    --radius: 0.75rem; /* Rounded corners for modern feel */
+    --radius: 0.75rem; /* 12px rounded corners for modern feel */
 
-    /* Calendar specific colors */
-    --calendar-today: 155 25% 35%;
-    --calendar-selected: 155 17% 21%;
+    /* Calendar Module Colors */
+    --calendar-today: var(--inforia-burgundy);
+    --calendar-selected: var(--inforia-green);
     --calendar-hover: 155 10% 90%;
 
-    /* Module backgrounds */
+    /* Module System */
     --module-background: 0 0% 100%;
     --module-border: 40 15% 90%;
 
@@ -119,7 +127,7 @@ All colors MUST be HSL for consistency.
     @apply bg-background text-foreground font-sans;
   }
 
-  /* Typography System */
+  /* INFORIA Typography System */
   .font-serif {
     font-family: 'Lora', serif;
   }
@@ -128,9 +136,30 @@ All colors MUST be HSL for consistency.
     font-family: 'Nunito Sans', sans-serif;
   }
 
+  /* Typography Hierarchy */
+  .inforia-h1 {
+    @apply font-serif text-3xl font-semibold text-primary;
+  }
+
+  .inforia-h2 {
+    @apply font-serif text-2xl font-medium text-primary;
+  }
+
+  .inforia-h3 {
+    @apply font-serif text-xl font-medium text-primary;
+  }
+
+  .inforia-body {
+    @apply font-sans text-base font-normal text-foreground;
+  }
+
+  .inforia-small {
+    @apply font-sans text-sm font-normal text-muted-foreground;
+  }
+
   /* Module title styling */
   .module-title {
-    @apply font-serif text-xl font-medium text-foreground;
+    @apply font-serif text-xl font-medium text-primary;
   }
 
   /* Calm animations */

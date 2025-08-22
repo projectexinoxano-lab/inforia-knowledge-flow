@@ -10,91 +10,85 @@ import {
 import { 
   User, 
   LogOut, 
-  Menu,
   Users,
   FileText,
-  HelpCircle,
-  Calendar
+  HelpCircle
 } from 'lucide-react';
 
 export function Header() {
   const { user, signOut } = useAuth();
 
   return (
-    <header className="bg-[#2E403B] border-b border-[#2E403B]/10 sticky top-0 z-50">
-      <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
+    <header className="bg-primary border-b border-primary/10 sticky top-0 z-50 h-16">
+      <div className="container mx-auto px-6">
+        <div className="flex items-center justify-between h-full">
           
-          {/* Logo */}
-          <div className="flex items-center space-x-4">
+          {/* INFORIA Logo - Exact Brand Positioning */}
+          <div className="flex items-center space-x-3">
             <div className="flex items-center space-x-2">
-              <div className="h-8 w-8 bg-[#D4AF37] rounded-full flex items-center justify-center">
-                <span className="text-[#2E403B] font-bold text-sm font-lora">i</span>
+              <div className="h-8 w-8 bg-gold rounded-full flex items-center justify-center">
+                <span className="text-primary font-bold text-sm font-serif">i</span>
               </div>
-              <span className="text-xl font-lora font-bold text-white">
+              <span className="text-xl font-serif font-semibold text-primary-foreground tracking-tight">
                 iNFORiA
               </span>
             </div>
           </div>
 
-          {/* Navegación Principal */}
-          <nav className="hidden md:flex items-center space-x-6">
+          {/* Clean Navigation - No redundant elements */}
+          <nav className="hidden md:flex items-center space-x-1">
             <Button 
               variant="ghost" 
-              className="text-white hover:text-[#D4AF37] hover:bg-[#2E403B]/20 font-nunito-sans"
+              className="text-primary-foreground hover:text-gold hover:bg-primary/20 font-sans font-medium"
               onClick={() => window.location.href = '/'}
             >
-              <Calendar className="mr-2 h-4 w-4" />
               Dashboard
             </Button>
             
             <Button 
               variant="ghost" 
-              className="text-white hover:text-[#D4AF37] hover:bg-[#2E403B]/20 font-nunito-sans"
+              className="text-primary-foreground hover:text-gold hover:bg-primary/20 font-sans font-medium"
               onClick={() => window.location.href = '/patient-list'}
             >
-              <Users className="mr-2 h-4 w-4" />
               Pacientes
             </Button>
             
             <Button 
               variant="ghost" 
-              className="text-white hover:text-[#D4AF37] hover:bg-[#2E403B]/20 font-nunito-sans"
+              className="text-primary-foreground hover:text-gold hover:bg-primary/20 font-sans font-medium"
               onClick={() => window.location.href = '/session-workspace'}
             >
-              <FileText className="mr-2 h-4 w-4" />
               Nueva Sesión
             </Button>
             
             <Button 
               variant="ghost" 
-              className="text-white hover:text-[#D4AF37] hover:bg-[#2E403B]/20 font-nunito-sans"
+              className="text-primary-foreground hover:text-gold hover:bg-primary/20 font-sans font-medium"
               onClick={() => window.location.href = '/faqs'}
             >
-              <HelpCircle className="mr-2 h-4 w-4" />
               Ayuda
             </Button>
           </nav>
 
-          {/* Menú de Usuario */}
-          <div className="flex items-center space-x-4">
+          {/* User Menu - INFORIA Brand Styling */}
+          <div className="flex items-center">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="text-white hover:text-[#D4AF37]">
-                  <div className="flex items-center space-x-2">
-                    <div className="h-8 w-8 bg-[#D4AF37] rounded-full flex items-center justify-center">
-                      <span className="text-[#2E403B] text-sm font-semibold">
+                <Button variant="ghost" className="text-primary-foreground hover:text-gold font-sans">
+                  <div className="flex items-center space-x-3">
+                    <div className="h-8 w-8 bg-gold rounded-full flex items-center justify-center">
+                      <span className="text-primary text-sm font-semibold">
                         {user?.user_metadata?.full_name?.charAt(0) || user?.email?.charAt(0) || 'U'}
                       </span>
                     </div>
-                    <span className="hidden md:block text-sm font-nunito-sans">
+                    <span className="hidden md:block text-sm font-medium">
                       {user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Usuario'}
                     </span>
                   </div>
                 </Button>
               </DropdownMenuTrigger>
               
-              <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuContent align="end" className="w-56 bg-card border-border">
                 <DropdownMenuItem onClick={() => window.location.href = '/my-account'}>
                   <User className="mr-2 h-4 w-4" />
                   Mi Cuenta
@@ -128,7 +122,7 @@ export function Header() {
                 
                 <DropdownMenuSeparator />
                 
-                <DropdownMenuItem onClick={signOut} className="text-red-600">
+                <DropdownMenuItem onClick={signOut} className="text-destructive">
                   <LogOut className="mr-2 h-4 w-4" />
                   Cerrar Sesión
                 </DropdownMenuItem>
