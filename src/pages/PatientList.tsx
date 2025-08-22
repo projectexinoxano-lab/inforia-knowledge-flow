@@ -4,69 +4,59 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Search, Plus, Eye, Edit, MoreVertical } from "lucide-react";
+import { Search, Plus, Eye, Edit, MoreVertical, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-interface Patient {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  lastSession: string;
-  status: "Activo" | "Inactivo" | "En pausa";
-  totalSessions: number;
-  tags: string[];
-}
-const mockPatients: Patient[] = [{
-  id: "1",
-  name: "María García López",
-  email: "maria.garcia@email.com",
-  phone: "+34 612 345 678",
-  lastSession: "2024-01-20",
-  status: "Activo",
-  totalSessions: 12,
-  tags: ["Ansiedad", "Terapia Cognitiva"]
-}, {
-  id: "2",
-  name: "Carlos Ruiz Mendez",
-  email: "carlos.ruiz@email.com",
-  phone: "+34 678 901 234",
-  lastSession: "2024-01-18",
-  status: "Activo",
-  totalSessions: 8,
-  tags: ["Depresión", "Mindfulness"]
-}, {
-  id: "3",
-  name: "Ana Fernández Silva",
-  email: "ana.fernandez@email.com",
-  phone: "+34 645 123 789",
-  lastSession: "2023-12-15",
-  status: "En pausa",
-  totalSessions: 15,
-  tags: ["Trauma", "EMDR"]
-}, {
-  id: "4",
-  name: "Javier Moreno Castro",
-  email: "javier.moreno@email.com",
-  phone: "+34 699 876 543",
-  lastSession: "2024-01-19",
-  status: "Activo",
-  totalSessions: 6,
-  tags: ["Pareja", "Sistémica"]
-}];
+import { usePatients } from "@/hooks/usePatients";
+import { useState } from "react";
+import type { Patient } from "@/services/database";
 const PatientList = () => {
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "Activo":
-        return "bg-green-100 text-green-800 border-green-200";
-      case "En pausa":
-        return "bg-yellow-100 text-yellow-800 border-yellow-200";
-      case "Inactivo":
-        return "bg-gray-100 text-gray-800 border-gray-200";
-      default:
-        return "bg-gray-100 text-gray-800 border-gray-200";
-    }
+  const { data: patients, isLoading, error } = usePatients();
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredPatients = patients?.filter(patient => 
+    patient.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    patient.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    patient.phone?.toLowerCase().includes(searchQuery.toLowerCase())
+  ) || [];
+
+  const getInitials = (name: string) => {
+    return name.split(' ')
+      .map(n => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
   };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('es-ES');
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <NavigationHeader />
+        <main className="container mx-auto px-6 py-8 max-w-7xl">
+          <div className="flex items-center justify-center h-64">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background">
+        <NavigationHeader />
+        <main className="container mx-auto px-6 py-8 max-w-7xl">
+          <div className="text-center py-12">
+            <p className="text-destructive">Error al cargar los pacientes</p>
+          </div>
+        </main>
+      </div>
+    );
+  }
   return <div className="min-h-screen bg-background">
       <NavigationHeader />
       
@@ -96,7 +86,12 @@ const PatientList = () => {
             <div className="flex items-center space-x-4">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Buscar por nombre, email o teléfono..." className="pl-10" />
+                <Input 
+                  placeholder="Buscar por nombre, email o teléfono..." 
+                  className="pl-10" 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
               </div>
               <Button variant="outline" className="font-sans">
                 Filtros
@@ -106,7 +101,38 @@ const PatientList = () => {
         </Card>
 
         {/* Stats Cards */}
-        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Total Pacientes</p>
+                  <p className="text-2xl font-bold text-foreground">{patients?.length || 0}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Activos</p>
+                  <p className="text-2xl font-bold text-green-600">{filteredPatients.length}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Nuevos este mes</p>
+                  <p className="text-2xl font-bold text-blue-600">0</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
 
         {/* Patients List */}
         <Card>
@@ -114,69 +140,89 @@ const PatientList = () => {
             
           </CardHeader>
           <CardContent className="p-0">
-            <div className="divide-y divide-border">
-              {mockPatients.map(patient => <div key={patient.id} className="p-6 hover:bg-secondary/50 transition-calm">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4">
-                      <Avatar className="h-12 w-12">
-                        <AvatarImage src="/placeholder.svg" alt={patient.name} />
-                        <AvatarFallback className="bg-primary text-primary-foreground font-sans">
-                          {patient.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
-                        </AvatarFallback>
-                      </Avatar>
-                      
-                      <div className="space-y-1">
-                        <Link to={`/patient-detailed-profile?id=${patient.id}`} className="font-serif text-lg font-medium text-foreground hover:text-primary transition-calm">
-                          {patient.name}
-                        </Link>
-                        <div className="flex items-center space-x-4 text-sm text-muted-foreground font-sans">
-                          <span>{patient.email}</span>
-                          <span>•</span>
-                          <span>{patient.phone}</span>
-                          <span>•</span>
-                          <span>{patient.totalSessions} sesiones</span>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Badge className={getStatusColor(patient.status)}>
-                            {patient.status}
-                          </Badge>
-                          {patient.tags.map(tag => <Badge key={tag} variant="outline" className="font-sans">
-                              {tag}
-                            </Badge>)}
+            {filteredPatients.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-muted-foreground">
+                  {searchQuery ? 'No se encontraron pacientes con ese criterio' : 'No hay pacientes registrados'}
+                </p>
+                {!searchQuery && (
+                  <Link to="/new-patient">
+                    <Button className="mt-4 bg-primary hover:bg-primary/90">
+                      <Plus className="mr-2 h-4 w-4" />
+                      Crear primer paciente
+                    </Button>
+                  </Link>
+                )}
+              </div>
+            ) : (
+              <div className="divide-y divide-border">
+                {filteredPatients.map(patient => (
+                  <div key={patient.id} className="p-6 hover:bg-secondary/50 transition-calm">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-4">
+                        <Avatar className="h-12 w-12">
+                          <AvatarFallback className="bg-primary text-primary-foreground font-sans">
+                            {getInitials(patient.name)}
+                          </AvatarFallback>
+                        </Avatar>
+                        
+                        <div className="space-y-1">
+                          <Link 
+                            to={`/patient-detailed-profile?id=${patient.id}`} 
+                            className="font-serif text-lg font-medium text-foreground hover:text-primary transition-calm"
+                          >
+                            {patient.name}
+                          </Link>
+                          <div className="flex items-center space-x-4 text-sm text-muted-foreground font-sans">
+                            {patient.email && <span>{patient.email}</span>}
+                            {patient.email && patient.phone && <span>•</span>}
+                            {patient.phone && <span>{patient.phone}</span>}
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <Badge variant="outline" className="bg-green-100 text-green-800 border-green-200">
+                              Activo
+                            </Badge>
+                            {patient.notes && (
+                              <Badge variant="outline" className="font-sans">
+                                Con notas
+                              </Badge>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    
-                    <div className="flex items-center space-x-2">
-                      <span className="text-sm text-muted-foreground font-sans">
-                        Última sesión: {new Date(patient.lastSession).toLocaleDateString('es-ES')}
-                      </span>
                       
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm">
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem>
-                            <Link to={`/patient-detailed-profile?id=${patient.id}`} className="w-full flex items-center">
-                              <Eye className="mr-2 h-4 w-4" />
-                              Ver Ficha
-                            </Link>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>
-                            <Link to={`/session-workspace?patientId=${patient.id}`} className="w-full flex items-center">
-                              <Edit className="mr-2 h-4 w-4" />
-                              Nueva Sesión
-                            </Link>
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                      <div className="flex items-center space-x-2">
+                        <span className="text-sm text-muted-foreground font-sans">
+                          Creado: {formatDate(patient.created_at)}
+                        </span>
+                        
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm">
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem>
+                              <Link to={`/patient-detailed-profile?id=${patient.id}`} className="w-full flex items-center">
+                                <Eye className="mr-2 h-4 w-4" />
+                                Ver Ficha
+                              </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>
+                              <Link to={`/session-workspace?patientId=${patient.id}`} className="w-full flex items-center">
+                                <Edit className="mr-2 h-4 w-4" />
+                                Nueva Sesión
+                              </Link>
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
                     </div>
                   </div>
-                </div>)}
-            </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       </main>
