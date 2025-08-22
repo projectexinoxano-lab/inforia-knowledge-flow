@@ -1,177 +1,154 @@
 import { useState } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from "@/components/ui/hover-card";
-
-interface CalendarDay {
-  date: number;
-  hasAppointments: boolean;
-  appointments?: Array<{
-    time: string;
-    patientName: string;
-  }>;
-}
+import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+import { Button } from "./ui/button";
+import { Calendar } from "./ui/calendar";
+import { Badge } from "./ui/badge";
+import { CalendarIcon, Plus, ChevronLeft, ChevronRight } from "lucide-react";
+import { Link } from "react-router-dom";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
 
 const CalendarModule = () => {
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const navigate = useNavigate();
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   
-  const monthNames = [
-    "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-    "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+  // Mock data for appointments on specific dates
+  const appointmentDates = [
+    new Date(2025, 7, 22), // August 22, 2025
+    new Date(2025, 7, 24), // August 24, 2025
+    new Date(2025, 7, 26), // August 26, 2025
+    new Date(2025, 7, 28), // August 28, 2025
   ];
 
-  const getDaysInMonth = (date: Date): CalendarDay[] => {
-    const year = date.getFullYear();
-    const month = date.getMonth();
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-    const daysInMonth = lastDay.getDate();
-    const startingDayOfWeek = (firstDay.getDay() + 6) % 7; // Ajuste para que lunes sea 0
-
-    const days: CalendarDay[] = [];
-
-    // Add empty days for the beginning of the month
-    for (let i = 0; i < startingDayOfWeek; i++) {
-      days.push({ date: 0, hasAppointments: false });
-    }
-
-    // Add days of the month with mock appointment data
-    for (let day = 1; day <= daysInMonth; day++) {
-      const hasAppointments = day === 22 || day === 25 || day === 28; // Mock data
-      const appointments = hasAppointments ? [
-        { time: "10:00", patientName: "Paz García" },
-        { time: "12:30", patientName: "Marcos Alonso" }
-      ] : undefined;
-
-      days.push({
-        date: day,
-        hasAppointments,
-        appointments
-      });
-    }
-
-    return days;
+  const hasAppointments = (date: Date) => {
+    return appointmentDates.some(appointmentDate => 
+      appointmentDate.toDateString() === date.toDateString()
+    );
   };
 
-  const navigateMonth = (direction: "prev" | "next") => {
-    setCurrentDate(prev => {
-      const newDate = new Date(prev);
-      if (direction === "prev") {
-        newDate.setMonth(prev.getMonth() - 1);
-      } else {
-        newDate.setMonth(prev.getMonth() + 1);
-      }
-      return newDate;
-    });
+  const getAppointmentsForDate = (date: Date) => {
+    if (!hasAppointments(date)) return [];
+    
+    // Mock appointments for the selected date
+    return [
+      { id: 1, time: "09:30", patient: "María González", type: "Primera Visita" },
+      { id: 2, time: "14:00", patient: "Carlos Ruiz", type: "Seguimiento" }
+    ];
   };
 
-  const handleDayClick = (day: number) => {
-    const year = currentDate.getFullYear();
-    const month = currentDate.getMonth() + 1; // +1 because getMonth() returns 0-11
-    const dateParam = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
-    navigate(`/new-patient?date=${dateParam}`);
-  };
-
-  const days = getDaysInMonth(currentDate);
-  const weekDays = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
+  const appointments = selectedDate ? getAppointmentsForDate(selectedDate) : [];
 
   return (
-    <div className="bg-card rounded-lg border border-module-border p-4 w-full h-full flex flex-col">
-      {/* Title */}
-      <h3 className="font-serif text-lg font-medium text-foreground mb-4 text-center">
-        Calendario
-      </h3>
+    <Card className="border-module-border bg-module-background hover:shadow-md transition-calm">
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between">
+          <CardTitle className="module-title flex items-center">
+            <CalendarIcon className="mr-2 h-4 w-4" />
+            Calendario
+          </CardTitle>
+          <Link to={`/new-patient?date=${selectedDate ? format(selectedDate, 'yyyy-MM-dd') : ''}`}>
+            <Button size="sm" variant="outline">
+              <Plus className="h-3 w-3" />
+            </Button>
+          </Link>
+        </div>
+      </CardHeader>
+      
+      <CardContent className="space-y-4">
+        {/* Calendar Widget */}
+        <div className="calendar-container">
+          <Calendar
+            mode="single"
+            selected={selectedDate}
+            onSelect={setSelectedDate}
+            locale={es}
+            className="rounded-md border-0 p-0"
+            classNames={{
+              months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
+              month: "space-y-4",
+              caption: "flex justify-center pt-1 relative items-center",
+              caption_label: "text-sm font-medium",
+              nav: "space-x-1 flex items-center",
+              nav_button: "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100",
+              nav_button_previous: "absolute left-1",
+              nav_button_next: "absolute right-1",
+              table: "w-full border-collapse space-y-1",
+              head_row: "flex",
+              head_cell: "text-muted-foreground rounded-md w-8 font-normal text-[0.8rem]",
+              row: "flex w-full mt-2",
+              cell: "text-center text-xs p-0 relative [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
+              day: "h-8 w-8 p-0 font-normal aria-selected:opacity-100 hover:bg-accent hover:text-accent-foreground rounded-md",
+              day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
+              day_today: "bg-accent text-accent-foreground",
+              day_outside: "text-muted-foreground opacity-50",
+              day_disabled: "text-muted-foreground opacity-50",
+              day_range_middle: "aria-selected:bg-accent aria-selected:text-accent-foreground",
+              day_hidden: "invisible",
+            }}
+            modifiers={{
+              hasAppointments: appointmentDates
+            }}
+            modifiersClassNames={{
+              hasAppointments: "relative after:absolute after:bottom-0 after:left-1/2 after:transform after:-translate-x-1/2 after:w-1 after:h-1 after:bg-burgundy after:rounded-full"
+            }}
+            components={{
+              IconLeft: ({ ...props }) => <ChevronLeft className="h-4 w-4" />,
+              IconRight: ({ ...props }) => <ChevronRight className="h-4 w-4" />,
+            }}
+          />
+        </div>
 
-      {/* Month Navigation */}
-      <div className="flex items-center justify-between mb-4 bg-background rounded-lg p-3">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => navigateMonth("prev")}
-          className="h-8 w-8 hover:bg-primary hover:text-primary-foreground"
-        >
-          <ChevronLeft className="h-4 w-4" />
-        </Button>
-        
-        <span className="text-sm font-semibold text-foreground px-2">
-          {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
-        </span>
-        
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => navigateMonth("next")}
-          className="h-8 w-8 hover:bg-primary hover:text-primary-foreground"
-        >
-          <ChevronRight className="h-4 w-4" />
-        </Button>
-      </div>
-
-      {/* Week Days Header */}
-      <div className="grid grid-cols-7 gap-1 mb-3">
-        {weekDays.map((day) => (
-          <div key={day} className="text-center text-xs font-semibold text-primary py-2 bg-background rounded">
-            {day}
-          </div>
-        ))}
-      </div>
-
-      {/* Calendar Grid */}
-      <div className="grid grid-cols-7 gap-1 flex-1">
-        {days.map((day, index) => (
-          <div key={index} className="aspect-square flex items-center justify-center relative min-h-[32px]">
-            {day.date > 0 && (
-              <>
-                {day.hasAppointments && day.appointments ? (
-                  <HoverCard>
-                    <HoverCardTrigger asChild>
-                      <button 
-                        onClick={() => handleDayClick(day.date)}
-                        className="w-full h-full flex items-center justify-center text-sm font-medium text-foreground hover:bg-calendar-hover rounded transition-calm relative bg-background border border-transparent hover:border-primary"
-                      >
-                        {day.date}
-                        <div 
-                          className="absolute top-1 right-1 w-2 h-2 rounded-full shadow-sm bg-burgundy"
-                        />
-                      </button>
-                    </HoverCardTrigger>
-                    <HoverCardContent className="w-auto p-3" side="top">
-                      <div className="space-y-2">
-                        <h4 className="font-semibold text-xs text-foreground mb-2">Citas del día</h4>
-                        {day.appointments.map((appointment, idx) => (
-                          <div key={idx} className="text-xs p-2 bg-background rounded border">
-                            <span className="font-medium text-primary">{appointment.time}</span> - 
-                            <button 
-                              onClick={() => navigate('/patient-detailed-profile')}
-                              className="text-foreground hover:text-primary hover:underline transition-colors ml-1"
-                            >
-                              {appointment.patientName}
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    </HoverCardContent>
-                  </HoverCard>
-                ) : (
-                  <button 
-                    onClick={() => handleDayClick(day.date)}
-                    className="w-full h-full flex items-center justify-center text-sm font-medium text-foreground hover:bg-calendar-hover rounded transition-calm bg-background border border-transparent hover:border-muted"
+        {/* Selected Date Info */}
+        {selectedDate && (
+          <div className="pt-3 border-t border-module-border">
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="font-medium text-foreground text-sm">
+                {format(selectedDate, "d 'de' MMMM", { locale: es })}
+              </h4>
+              {appointments.length > 0 && (
+                <Badge variant="secondary" className="text-xs">
+                  {appointments.length} cita{appointments.length > 1 ? 's' : ''}
+                </Badge>
+              )}
+            </div>
+            
+            {appointments.length > 0 ? (
+              <div className="space-y-2">
+                {appointments.map((appointment) => (
+                  <div
+                    key={appointment.id}
+                    className="flex items-center justify-between p-2 rounded-md bg-muted/30 hover:bg-muted/50 transition-calm text-xs"
                   >
-                    {day.date}
-                  </button>
-                )}
-              </>
+                    <div className="flex items-center space-x-2">
+                      <span className="font-medium text-foreground">
+                        {appointment.time}
+                      </span>
+                      <span className="text-muted-foreground">
+                        {appointment.patient}
+                      </span>
+                    </div>
+                    <Badge variant="outline" className="text-xs">
+                      {appointment.type}
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-4">
+                <p className="text-xs text-muted-foreground">
+                  No hay citas programadas
+                </p>
+                <Link to={`/new-patient?date=${format(selectedDate, 'yyyy-MM-dd')}`}>
+                  <Button size="sm" variant="outline" className="mt-2 text-xs">
+                    <Plus className="mr-1 h-3 w-3" />
+                    Agendar cita
+                  </Button>
+                </Link>
+              </div>
             )}
           </div>
-        ))}
-      </div>
-    </div>
+        )}
+      </CardContent>
+    </Card>
   );
 };
 
