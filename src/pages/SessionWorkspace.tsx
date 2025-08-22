@@ -13,7 +13,9 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { creditsService } from '@/services/credits';
+import { googleDriveService } from '@/services/googleDrive';
 import { useQueryClient } from '@tanstack/react-query';
+import GoogleDriveIntegration from '@/components/GoogleDriveIntegration';
 
 const SessionWorkspace = () => {
   const [searchParams] = useSearchParams();
@@ -146,9 +148,14 @@ const SessionWorkspace = () => {
       await creditsService.consumeCredit();
       console.log('✅ Crédito consumido exitosamente');
 
+      // Mensaje personalizado según donde se guardó
+      const driveMessage = data.drive_status === 'saved_to_drive' 
+        ? `El informe "${data.report.title}" se ha guardado en tu Google Drive`
+        : `El informe "${data.report.title}" se ha creado correctamente`;
+
       toast({
         title: "¡Informe generado exitosamente!",
-        description: `El informe "${data.report.title}" se ha creado correctamente`,
+        description: driveMessage,
       });
 
       // Limpiar formulario
@@ -387,6 +394,9 @@ const SessionWorkspace = () => {
               />
             </div>
           )}
+
+          {/* Google Drive Integration Status */}
+          <GoogleDriveIntegration className="mb-6" />
 
           {/* Additional Files Section */}
           <div className="space-y-4">
