@@ -7,190 +7,205 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+interface ReportRequest {
+  patient_id: string;
+  patient_name: string;
+  session_notes: string;
+  report_type: 'primera_visita' | 'seguimiento';
+  input_type: 'voice' | 'text' | 'mixed';
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response('ok', { headers: corsHeaders });
   }
 
   try {
-    const { patientId, sessionNotes, reportType = 'seguimiento', reportId } = await req.json();
+    console.log('🚀 Edge Function iniciada - generate-report');
     
-    if (!patientId || !sessionNotes) {
+    // Verificar autenticación
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      console.error('❌ No authorization header');
       return new Response(
-        JSON.stringify({ error: 'Patient ID and session notes are required' }),
+        JSON.stringify({ error: 'No authorization header' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Crear cliente Supabase
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      { global: { headers: { Authorization: authHeader } } }
+    );
+
+    // Verificar usuario autenticado
+    const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
+    if (authError || !user) {
+      console.error('❌ Error de autenticación:', authError);
+      return new Response(
+        JSON.stringify({ error: 'Usuario no autenticado' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log('✅ Usuario autenticado:', user.email);
+
+    // Parsear body request
+    const requestData: ReportRequest = await req.json();
+    console.log('📥 Datos recibidos:', {
+      patient_id: requestData.patient_id,
+      patient_name: requestData.patient_name,
+      report_type: requestData.report_type,
+      input_type: requestData.input_type,
+      notes_length: requestData.session_notes?.length || 0
+    });
+
+    // Validar datos requeridos
+    const { patient_id, patient_name, session_notes, report_type, input_type } = requestData;
+    if (!patient_id || !patient_name || !session_notes || !report_type) {
+      console.error('❌ Datos faltantes en request');
+      return new Response(
+        JSON.stringify({ error: 'Faltan datos requeridos' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const openRouterApiKey = Deno.env.get('OPENROUTER_API_KEY');
-    if (!openRouterApiKey) {
-      console.error('OpenRouter API key not found');
+    // Verificar API key de OpenRouter
+    const openRouterKey = Deno.env.get('OPENROUTER_API_KEY');
+    if (!openRouterKey) {
+      console.error('❌ OPENROUTER_API_KEY no configurada');
       return new Response(
-        JSON.stringify({ error: 'API key not configured' }),
+        JSON.stringify({ error: 'Configuración de IA no disponible' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Initialize Supabase client
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-    );
+    console.log('🤖 Generando informe con IA...');
 
-    // Get patient information
-    const { data: patient, error: patientError } = await supabase
-      .from('patients')
-      .select('*')
-      .eq('id', patientId)
-      .single();
+    // Construir prompt para IA
+    const prompt = `Genera un informe psicológico profesional basado en:
 
-    if (patientError || !patient) {
-      console.error('Patient not found:', patientError);
-      return new Response(
-        JSON.stringify({ error: 'Patient not found' }),
-        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+**INFORMACIÓN DEL PACIENTE:**
+- Nombre: ${patient_name}
 
-    // Calculate patient age from birth_date
-    let patientAge = 'No especificada';
-    if (patient.birth_date) {
-      const birthDate = new Date(patient.birth_date);
-      const today = new Date();
-      const age = today.getFullYear() - birthDate.getFullYear();
-      const monthDiff = today.getMonth() - birthDate.getMonth();
-      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-        patientAge = (age - 1).toString();
-      } else {
-        patientAge = age.toString();
-      }
-    }
+**NOTAS DE LA SESIÓN:**
+${session_notes}
 
-    // Get patient's previous reports for context
-    const { data: previousReports } = await supabase
-      .from('reports')
-      .select('content, created_at')
-      .eq('patient_id', patientId)
-      .order('created_at', { ascending: false })
-      .limit(3);
+**TIPO DE INFORME:** ${report_type === 'primera_visita' ? 'Primera Visita' : 'Sesión de Seguimiento'}
 
-    // Prepare context for AI
-    let contextPrompt = '';
-    if (previousReports && previousReports.length > 0) {
-      contextPrompt = `\n\nHistorial previo del paciente (últimos informes):\n${previousReports.map(r => 
-        `- ${new Date(r.created_at).toLocaleDateString('es-ES')}: ${r.content?.substring(0, 200)}...`
-      ).join('\n')}`;
-    }
+Estructura el informe con las siguientes secciones:
+1. **DATOS DE IDENTIFICACIÓN**
+2. **MOTIVO DE CONSULTA**
+3. **OBSERVACIONES CLÍNICAS**
+4. **EVALUACIÓN PSICOLÓGICA**
+5. **IMPRESIÓN DIAGNÓSTICA** (si aplica)
+6. **PLAN DE TRATAMIENTO/RECOMENDACIONES**
+7. **PRÓXIMOS PASOS**
 
-    const systemPrompt = `Eres un asistente especializado en generar informes clínicos para psicólogos profesionales.
+Utiliza un lenguaje profesional, empático y clínicamente apropiado. El informe debe ser completo pero conciso.`;
 
-INFORMACIÓN DEL PACIENTE:
-- Nombre: ${patient.name}
-- Edad: ${patientAge} años
-- Email: ${patient.email || 'No proporcionado'}
-- Teléfono: ${patient.phone || 'No proporcionado'}
-- Notas del profesional: ${patient.notes || 'Sin notas adicionales'}
-${contextPrompt}
-
-INSTRUCCIONES:
-1. Genera un informe clínico profesional y estructurado
-2. Tipo de informe: ${reportType === 'primera_visita' ? 'Primera Visita' : 'Seguimiento'}
-3. Incluye las siguientes secciones:
-   - Resumen de la sesión
-   - Observaciones clínicas
-   - Evolución del paciente (si es seguimiento)
-   - Plan de tratamiento/Recomendaciones
-   - Próximos pasos
-
-4. Mantén un tono profesional y empático
-5. Basa el contenido en las notas de sesión proporcionadas
-6. El informe debe tener entre 300-500 palabras
-7. Usa terminología clínica apropiada pero accesible`;
-
-    const userPrompt = `Notas de la sesión:
-${sessionNotes}
-
-Por favor genera el informe clínico basado en estas notas.`;
-
-    // Call OpenRouter API
-    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    // Llamada a OpenRouter
+    const openRouterResponse = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${openRouterApiKey}`,
+        'Authorization': `Bearer ${openRouterKey}`,
         'Content-Type': 'application/json',
         'HTTP-Referer': 'https://inforia.app',
-        'X-Title': 'iNFORiA Clinical Assistant'
+        'X-Title': 'INFORIA Clinical Assistant'
       },
       body: JSON.stringify({
-        model: 'anthropic/claude-3.5-sonnet',
+        model: 'meta-llama/llama-3.1-8b-instruct:free',
         messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt }
+          {
+            role: 'system',
+            content: 'Eres un asistente especializado en redacción de informes psicológicos clínicos en español. Generas informes profesionales, estructurados y empáticos siguiendo las mejores prácticas clínicas.'
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
         ],
-        max_tokens: 1500,
-        temperature: 0.3
-      }),
+        max_tokens: 2000,
+        temperature: 0.7
+      })
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('OpenRouter API error:', response.status, errorText);
+    if (!openRouterResponse.ok) {
+      const errorText = await openRouterResponse.text();
+      console.error('❌ Error OpenRouter:', openRouterResponse.status, errorText);
       return new Response(
-        JSON.stringify({ error: 'Failed to generate report' }),
+        JSON.stringify({ error: 'Error al generar informe con IA' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const aiResponse = await response.json();
-    const generatedReport = aiResponse.choices[0]?.message?.content;
+    const aiResult = await openRouterResponse.json();
+    const reportContent = aiResult.choices?.[0]?.message?.content;
 
-    if (!generatedReport) {
-      console.error('No content in AI response:', aiResponse);
+    if (!reportContent) {
+      console.error('❌ No se recibió contenido de IA');
       return new Response(
-        JSON.stringify({ error: 'Failed to generate report content' }),
+        JSON.stringify({ error: 'Error: no se generó contenido' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Update the existing report with generated content
-    const { data: savedReport, error: saveError } = await supabase
+    console.log('✅ Informe generado por IA. Longitud:', reportContent.length);
+
+    // Crear título del informe
+    const reportTitle = `Informe ${report_type === 'primera_visita' ? 'Primera Visita' : 'Seguimiento'} - ${patient_name} - ${new Date().toLocaleDateString('es-ES')}`;
+
+    // Guardar informe en base de datos
+    const { data: reportData, error: insertError } = await supabaseClient
       .from('reports')
-      .update({
-        content: generatedReport,
+      .insert({
+        user_id: user.id,
+        patient_id: patient_id,
+        title: reportTitle,
+        content: reportContent,
+        report_type: report_type,
+        input_type: input_type,
         status: 'completed'
       })
-      .eq('id', reportId)
       .select()
       .single();
 
-    if (saveError) {
-      console.error('Error saving report:', saveError);
+    if (insertError) {
+      console.error('❌ Error al guardar informe:', insertError);
       return new Response(
-        JSON.stringify({ error: 'Failed to save report' }),
+        JSON.stringify({ error: 'Error al guardar informe en base de datos' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log('Report generated successfully for patient:', patientId);
+    console.log('✅ Informe guardado en BD:', reportData.id);
 
+    // Respuesta exitosa
     return new Response(
-      JSON.stringify({ 
-        report: savedReport,
-        content: generatedReport 
-      }), 
+      JSON.stringify({
+        success: true,
+        report: reportData,
+        message: 'Informe generado exitosamente'
+      }),
       {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     );
 
   } catch (error) {
-    console.error('Error in generate-report function:', error);
+    console.error('💥 Error general en Edge Function:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({
+        error: 'Error interno del servidor',
+        details: error.message
+      }),
       {
         status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     );
   }

@@ -5,6 +5,7 @@ import { ReportModule } from "@/components/ReportModule";
 import { SearchModule } from "@/components/SearchModule";
 import StatsOverview from "@/components/StatsOverview";
 import QuickActions from "@/components/QuickActions";
+import { CreditsStatus } from "@/components/CreditsStatus";
 
 const MainDashboard = () => {
   return (
@@ -36,6 +37,11 @@ const MainDashboard = () => {
           {/* Columna Secundaria - Módulos de Control (30% - 3/10 columns) */}
           <div className="lg:col-span-3 space-y-6">
             
+            {/* Estado de Créditos */}
+            <div className="animate-fade-in" style={{ animationDelay: '250ms' }}>
+              <CreditsStatus />
+            </div>
+
             {/* Calendario Compacto */}
             <div className="animate-fade-in" style={{ animationDelay: '300ms' }}>
               <CalendarModule />
