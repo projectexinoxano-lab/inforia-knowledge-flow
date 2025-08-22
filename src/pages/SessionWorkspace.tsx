@@ -6,17 +6,21 @@ import { NavigationHeader } from "@/components/NavigationHeader";
 import { Play, Square, Upload, FileAudio, Volume2, Trash2, Loader2, Sparkles } from "lucide-react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { usePatient } from "@/hooks/usePatients";
-import { useGenerateReport } from "@/hooks/useReports";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { creditsService } from '@/services/credits';
+import { useQueryClient } from '@tanstack/react-query';
 
 const SessionWorkspace = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
   
   const patientId = searchParams.get('patientId');
   const { data: patient, isLoading: patientLoading } = usePatient(patientId || '');
-  const generateReport = useGenerateReport();
   
   const [isRecording, setIsRecording] = useState(false);
   const [timer, setTimer] = useState("00:00");
@@ -24,6 +28,7 @@ const SessionWorkspace = () => {
   const [hasFinishedRecording, setHasFinishedRecording] = useState(false);
   const [finalDuration, setFinalDuration] = useState("");
   const [reportType, setReportType] = useState<'primera_visita' | 'seguimiento'>('seguimiento');
+  const [isGenerating, setIsGenerating] = useState(false);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -60,27 +65,87 @@ const SessionWorkspace = () => {
   };
 
   const handleGenerateReport = async () => {
-    if (!patientId || !notes.trim()) {
+    if (!patient || !notes.trim()) {
       toast({
         title: "Datos incompletos",
-        description: "Debes tener un paciente seleccionado y notas de sesión",
+        description: "Por favor selecciona un paciente y añade notas de la sesión",
         variant: "destructive"
       });
       return;
     }
 
-    try {
-      await generateReport.mutateAsync({
-        patientId,
-        sessionNotes: notes,
-        reportType,
-        audioTranscription: hasFinishedRecording ? "Grabación de audio de " + finalDuration : undefined
+    // VERIFICAR CRÉDITOS ANTES DE GENERAR
+    const creditCheck = await creditsService.checkCanGenerateReport();
+    if (!creditCheck.canGenerate) {
+      toast({
+        title: "Límite de informes alcanzado",
+        description: creditCheck.message,
+        variant: "destructive"
       });
+      return;
+    }
+
+    setIsGenerating(true);
+    
+    try {
+      console.log('🚀 Iniciando generación de informe...');
       
-      // Navigate to patient profile after successful generation
-      navigate(`/patient-detailed-profile?id=${patientId}`);
+      // Llamada a Edge Function
+      const { data, error } = await supabase.functions.invoke('generate-report', {
+        body: {
+          patient_id: patient.id,
+          patient_name: patient.name,
+          session_notes: notes.trim(),
+          report_type: reportType,
+          input_type: hasFinishedRecording ? 'voice' : 'text'
+        }
+      });
+
+      if (error) {
+        console.error('❌ Error al generar informe:', error);
+        throw new Error(error.message || 'Error al generar informe');
+      }
+
+      if (!data?.success) {
+        console.error('❌ Respuesta no exitosa:', data);
+        throw new Error(data?.error || 'Error desconocido al generar informe');
+      }
+
+      console.log('✅ Informe generado exitosamente:', data.report.id);
+
+      // DESPUÉS de generar exitosamente, consumir crédito
+      await creditsService.consumeCredit();
+      console.log('✅ Crédito consumido exitosamente');
+
+      toast({
+        title: "¡Informe generado exitosamente!",
+        description: `El informe "${data.report.title}" se ha creado correctamente`,
+      });
+
+      // Limpiar formulario
+      setNotes('');
+      setHasFinishedRecording(false);
+      setFinalDuration('');
+      setTimer("00:00");
+      
+      // Invalidar queries para refrescar datos
+      queryClient.invalidateQueries({ queryKey: ['reports'] });
+      queryClient.invalidateQueries({ queryKey: ['patient-reports', patient.id] });
+      queryClient.invalidateQueries({ queryKey: ['user-profile'] });
+
+      // Navegar al perfil del paciente
+      navigate(`/patient-detailed-profile?id=${patient.id}`);
+
     } catch (error) {
-      console.error('Error generating report:', error);
+      console.error('💥 Error completo:', error);
+      
+      toast({
+        title: "Error al generar informe",
+        description: error instanceof Error ? error.message : "Error desconocido. Inténtalo de nuevo.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGenerating(false);
     }
   };
 
@@ -262,9 +327,9 @@ const SessionWorkspace = () => {
               size="lg" 
               className="h-12 px-8 text-base font-medium"
               onClick={handleGenerateReport}
-              disabled={!notes.trim() || generateReport.isPending}
+              disabled={!notes.trim() || isGenerating}
             >
-              {generateReport.isPending ? (
+              {isGenerating ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Generando Informe...
