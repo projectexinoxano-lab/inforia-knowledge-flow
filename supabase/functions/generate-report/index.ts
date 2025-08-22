@@ -158,17 +158,141 @@ Utiliza un lenguaje profesional, empático y clínicamente apropiado. El informe
     // Crear título del informe
     const reportTitle = `Informe ${report_type === 'primera_visita' ? 'Primera Visita' : 'Seguimiento'} - ${patient_name} - ${new Date().toLocaleDateString('es-ES')}`;
 
-    // Guardar informe en base de datos
+    console.log('🔄 Guardando informe en Google Drive del usuario...');
+
+    // Intentar guardar en Google Drive usando token del usuario
+    let googleDriveFileId = null;
+    let googleDriveLink = null;
+    let driveError = null;
+
+    try {
+      // Obtener token de Google del usuario
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      const googleToken = session?.provider_token;
+
+      if (googleToken) {
+        // Crear carpeta INFORIA si no existe
+        const folderResponse = await fetch(
+          `https://www.googleapis.com/drive/v3/files?q=name='INFORIA Reports' and mimeType='application/vnd.google-apps.folder' and trashed=false`,
+          {
+            headers: {
+              'Authorization': `Bearer ${googleToken}`,
+              'Content-Type': 'application/json'
+            }
+          }
+        );
+
+        let folderId = null;
+        if (folderResponse.ok) {
+          const folderData = await folderResponse.json();
+          if (folderData.files && folderData.files.length > 0) {
+            folderId = folderData.files[0].id;
+          } else {
+            // Crear carpeta
+            const createFolderResponse = await fetch('https://www.googleapis.com/drive/v3/files', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${googleToken}`,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                name: 'INFORIA Reports',
+                mimeType: 'application/vnd.google-apps.folder'
+              })
+            });
+
+            if (createFolderResponse.ok) {
+              const folderResult = await createFolderResponse.json();
+              folderId = folderResult.id;
+              console.log('✅ Carpeta INFORIA creada:', folderId);
+            }
+          }
+        }
+
+        // Crear documento en Google Drive
+        const metadata = {
+          name: `${reportTitle}.gdoc`,
+          parents: folderId ? [folderId] : [],
+          mimeType: 'application/vnd.google-apps.document'
+        };
+
+        const createDocResponse = await fetch('https://www.googleapis.com/drive/v3/files', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${googleToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(metadata)
+        });
+
+        if (createDocResponse.ok) {
+          const docResult = await createDocResponse.json();
+          googleDriveFileId = docResult.id;
+          googleDriveLink = `https://docs.google.com/document/d/${docResult.id}/edit`;
+
+          // Añadir contenido al documento
+          const requests = [
+            {
+              insertText: {
+                location: { index: 1 },
+                text: `${reportTitle}\n\n${reportContent}`
+              }
+            },
+            {
+              updateTextStyle: {
+                range: {
+                  startIndex: 1,
+                  endIndex: reportTitle.length + 1
+                },
+                textStyle: {
+                  bold: true,
+                  fontSize: { magnitude: 16, unit: 'PT' }
+                },
+                fields: 'bold,fontSize'
+              }
+            }
+          ];
+
+          const updateDocResponse = await fetch(
+            `https://docs.googleapis.com/v1/documents/${docResult.id}:batchUpdate`,
+            {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${googleToken}`,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ requests })
+            }
+          );
+
+          if (updateDocResponse.ok) {
+            console.log('✅ Informe guardado en Google Drive:', googleDriveFileId);
+          } else {
+            console.warn('⚠️ Documento creado pero error al formatear contenido');
+          }
+        } else {
+          throw new Error('Error creando documento en Google Drive');
+        }
+      } else {
+        console.warn('⚠️ No hay token de Google disponible - guardando solo metadata');
+      }
+    } catch (error) {
+      console.error('❌ Error guardando en Google Drive:', error);
+      driveError = error instanceof Error ? error.message : 'Error desconocido';
+    }
+
+    // Guardar metadata en base de datos (SOLO metadata, no contenido completo para zero-knowledge)
     const { data: reportData, error: insertError } = await supabaseClient
       .from('reports')
       .insert({
         user_id: user.id,
         patient_id: patient_id,
         title: reportTitle,
-        content: reportContent,
+        content: googleDriveFileId ? null : reportContent, // Solo guardar contenido si no se pudo guardar en Drive
+        google_drive_file_id: googleDriveFileId,
         report_type: report_type,
         input_type: input_type,
-        status: 'completed'
+        status: googleDriveFileId ? 'completed' : 'completed_local'
       })
       .select()
       .single();
@@ -187,8 +311,15 @@ Utiliza un lenguaje profesional, empático y clínicamente apropiado. El informe
     return new Response(
       JSON.stringify({
         success: true,
-        report: reportData,
-        message: 'Informe generado exitosamente'
+        report: {
+          ...reportData,
+          google_drive_link: googleDriveLink
+        },
+        drive_status: googleDriveFileId ? 'saved_to_drive' : 'saved_locally',
+        drive_error: driveError,
+        message: googleDriveFileId 
+          ? 'Informe generado y guardado en tu Google Drive' 
+          : 'Informe generado (guardado localmente - considera re-autenticar para Google Drive)'
       }),
       {
         status: 200,
