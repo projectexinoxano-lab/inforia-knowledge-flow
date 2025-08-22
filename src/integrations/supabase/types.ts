@@ -14,7 +14,134 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      patients: {
+        Row: {
+          birth_date: string | null
+          created_at: string | null
+          email: string | null
+          google_sheet_id: string | null
+          id: string
+          name: string
+          notes: string | null
+          phone: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          birth_date?: string | null
+          created_at?: string | null
+          email?: string | null
+          google_sheet_id?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          phone?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          birth_date?: string | null
+          created_at?: string | null
+          email?: string | null
+          google_sheet_id?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string | null
+          credits_limit: number | null
+          credits_used: number | null
+          full_name: string | null
+          id: string
+          plan_type: string | null
+          subscription_status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string | null
+          credits_limit?: number | null
+          credits_used?: number | null
+          full_name?: string | null
+          id: string
+          plan_type?: string | null
+          subscription_status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string | null
+          credits_limit?: number | null
+          credits_used?: number | null
+          full_name?: string | null
+          id?: string
+          plan_type?: string | null
+          subscription_status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      reports: {
+        Row: {
+          audio_transcription: string | null
+          content: string | null
+          created_at: string | null
+          google_drive_file_id: string | null
+          id: string
+          input_type: string
+          patient_id: string
+          report_type: string
+          status: string | null
+          title: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          audio_transcription?: string | null
+          content?: string | null
+          created_at?: string | null
+          google_drive_file_id?: string | null
+          id?: string
+          input_type: string
+          patient_id: string
+          report_type: string
+          status?: string | null
+          title: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          audio_transcription?: string | null
+          content?: string | null
+          created_at?: string | null
+          google_drive_file_id?: string | null
+          id?: string
+          input_type?: string
+          patient_id?: string
+          report_type?: string
+          status?: string | null
+          title?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reports_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
