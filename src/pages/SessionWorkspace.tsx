@@ -3,14 +3,27 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { NavigationHeader } from "@/components/NavigationHeader";
-import { Play, Square, Upload, FileAudio, Volume2, Trash2 } from "lucide-react";
+import { Play, Square, Upload, FileAudio, Volume2, Trash2, Loader2, Sparkles } from "lucide-react";
+import { useSearchParams, useNavigate } from "react-router-dom";
+import { usePatient } from "@/hooks/usePatients";
+import { useGenerateReport } from "@/hooks/useReports";
+import { useToast } from "@/hooks/use-toast";
 
 const SessionWorkspace = () => {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  
+  const patientId = searchParams.get('patientId');
+  const { data: patient, isLoading: patientLoading } = usePatient(patientId || '');
+  const generateReport = useGenerateReport();
+  
   const [isRecording, setIsRecording] = useState(false);
   const [timer, setTimer] = useState("00:00");
   const [notes, setNotes] = useState("");
   const [hasFinishedRecording, setHasFinishedRecording] = useState(false);
   const [finalDuration, setFinalDuration] = useState("");
+  const [reportType, setReportType] = useState<'primera_visita' | 'seguimiento'>('seguimiento');
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -46,6 +59,68 @@ const SessionWorkspace = () => {
     setFinalDuration("");
   };
 
+  const handleGenerateReport = async () => {
+    if (!patientId || !notes.trim()) {
+      toast({
+        title: "Datos incompletos",
+        description: "Debes tener un paciente seleccionado y notas de sesión",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      await generateReport.mutateAsync({
+        patientId,
+        sessionNotes: notes,
+        reportType,
+        audioTranscription: hasFinishedRecording ? "Grabación de audio de " + finalDuration : undefined
+      });
+      
+      // Navigate to patient profile after successful generation
+      navigate(`/patient-detailed-profile?id=${patientId}`);
+    } catch (error) {
+      console.error('Error generating report:', error);
+    }
+  };
+
+  const handleSaveDraft = () => {
+    // TODO: Implement save draft functionality
+    toast({
+      title: "Borrador guardado",
+      description: "Las notas de sesión se han guardado como borrador",
+    });
+  };
+
+  if (patientLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <NavigationHeader />
+        <main className="container mx-auto px-6 py-12 max-w-4xl">
+          <div className="flex items-center justify-center h-64">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  if (!patient && patientId) {
+    return (
+      <div className="min-h-screen bg-background">
+        <NavigationHeader />
+        <main className="container mx-auto px-6 py-12 max-w-4xl">
+          <div className="text-center py-12">
+            <p className="text-destructive">Paciente no encontrado</p>
+            <Button onClick={() => navigate('/patient-list')} className="mt-4">
+              Volver a la lista de pacientes
+            </Button>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       {/* Global Header for consistency */}
@@ -55,10 +130,28 @@ const SessionWorkspace = () => {
       <main className="container mx-auto px-6 py-12 max-w-4xl">
         <div className="space-y-8">
           {/* Page Header - Context */}
-          <div className="text-center">
+          <div className="text-center space-y-4">
             <h1 className="font-serif text-3xl font-medium text-foreground">
-              Registrando Sesión para: Paz García - 22 de julio de 2025
+              Registrando Sesión para: {patient?.name || 'Paciente'} - {new Date().toLocaleDateString('es-ES')}
             </h1>
+            
+            {/* Report Type Selection */}
+            <div className="flex justify-center gap-4">
+              <Button
+                variant={reportType === 'primera_visita' ? 'default' : 'outline'}
+                onClick={() => setReportType('primera_visita')}
+                size="sm"
+              >
+                Primera Visita
+              </Button>
+              <Button
+                variant={reportType === 'seguimiento' ? 'default' : 'outline'}
+                onClick={() => setReportType('seguimiento')}
+                size="sm"
+              >
+                Seguimiento
+              </Button>
+            </div>
           </div>
 
           {/* Recording Control Bar */}
@@ -159,15 +252,29 @@ const SessionWorkspace = () => {
             <Button 
               variant="secondary"
               size="lg" 
-              className="h-12 px-8 text-base font-medium bg-primary text-primary-foreground hover:bg-background hover:text-foreground border hover:border-primary transition-calm"
+              className="h-12 px-8 text-base font-medium"
+              onClick={handleSaveDraft}
+              disabled={!notes.trim()}
             >
               Guardar Borrador
             </Button>
             <Button 
               size="lg" 
               className="h-12 px-8 text-base font-medium"
+              onClick={handleGenerateReport}
+              disabled={!notes.trim() || generateReport.isPending}
             >
-              Generar Informe con IA
+              {generateReport.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Generando Informe...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="mr-2 h-4 w-4" />
+                  Generar Informe con IA
+                </>
+              )}
             </Button>
           </div>
         </div>

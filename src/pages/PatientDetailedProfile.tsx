@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -6,20 +6,46 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import DashboardHeader from "@/components/DashboardHeader";
-import { Edit, Plus, FileText, Calendar, Trash2, User, Tag, FileSignature, Clock, CreditCard, FileCheck, X } from "lucide-react";
+import { Edit, Plus, FileText, Calendar, Trash2, User, Tag, FileSignature, Clock, CreditCard, FileCheck, X, Loader2 } from "lucide-react";
+import { useSearchParams, useNavigate, Link } from "react-router-dom";
+import { usePatient, useUpdatePatient, useDeletePatient } from "@/hooks/usePatients";
+import { usePatientReports } from "@/hooks/useReports";
+import { useToast } from "@/hooks/use-toast";
 
 const PatientDetailedProfile = () => {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  
+  const patientId = searchParams.get('id');
+  const { data: patient, isLoading: patientLoading } = usePatient(patientId || '');
+  const { data: reports, isLoading: reportsLoading } = usePatientReports(patientId || '');
+  const updatePatientMutation = useUpdatePatient();
+  const deletePatientMutation = useDeletePatient();
+  
   const [isEditing, setIsEditing] = useState(false);
   const [patientData, setPatientData] = useState({
-    name: "Paz García",
-    phone: "+34 600 123 456",
-    email: "paz.garcia@email.com",
-    birthDate: "15/03/1985",
-    address: "Calle Mayor 123, 28001 Madrid",
-    emergencyContact: "María García - +34 600 654 321",
-    tags: ["Ansiedad", "Terapia Cognitiva"],
-    notes: "Paciente colaborativa con buena evolución en el tratamiento de ansiedad generalizada."
+    name: "",
+    phone: "",
+    email: "",
+    birth_date: "",
+    notes: "",
+    tags: [] as string[]
   });
+
+  // Update local state when patient data loads
+  useEffect(() => {
+    if (patient) {
+      setPatientData({
+        name: patient.name || "",
+        phone: patient.phone || "",
+        email: patient.email || "",
+        birth_date: patient.birth_date || "",
+        notes: patient.notes || "",
+        tags: [] // TODO: Add tags support to patient schema
+      });
+    }
+  }, [patient]);
 
   const [paymentData, setPaymentData] = useState([
     { date: "15/07/2025", amount: "75€", method: "Transferencia", status: "Pagado" },
@@ -27,19 +53,49 @@ const PatientDetailedProfile = () => {
     { date: "01/07/2025", amount: "75€", method: "Tarjeta", status: "Pagado" }
   ]);
 
-  const handleSaveChanges = () => {
-    setIsEditing(false);
-    // TODO: Implement save logic
+  const handleSaveChanges = async () => {
+    if (!patientId || !patient) return;
+    
+    try {
+      await updatePatientMutation.mutateAsync({
+        id: patientId,
+        updates: {
+          name: patientData.name,
+          phone: patientData.phone || null,
+          email: patientData.email || null,
+          birth_date: patientData.birth_date || null,
+          notes: patientData.notes || null,
+        }
+      });
+      setIsEditing(false);
+    } catch (error) {
+      console.error('Error updating patient:', error);
+    }
   };
 
   const handleCancelEdit = () => {
+    if (patient) {
+      setPatientData({
+        name: patient.name || "",
+        phone: patient.phone || "",
+        email: patient.email || "",
+        birth_date: patient.birth_date || "",
+        notes: patient.notes || "",
+        tags: []
+      });
+    }
     setIsEditing(false);
-    // TODO: Restore original data
   };
 
-  const handleDeletePatient = () => {
-    // TODO: Implement delete logic
-    console.log("Eliminar paciente");
+  const handleDeletePatient = async () => {
+    if (!patientId) return;
+    
+    try {
+      await deletePatientMutation.mutateAsync(patientId);
+      navigate('/patient-list');
+    } catch (error) {
+      console.error('Error deleting patient:', error);
+    }
   };
 
   const handleAcudirInforme = () => {
@@ -71,6 +127,40 @@ const PatientDetailedProfile = () => {
     });
   };
 
+  const formatDate = (dateString: string) => {
+    if (!dateString) return 'No especificada';
+    return new Date(dateString).toLocaleDateString('es-ES');
+  };
+
+  if (patientLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <DashboardHeader />
+        <main className="container mx-auto px-6 py-8">
+          <div className="flex items-center justify-center h-64">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  if (!patient && patientId) {
+    return (
+      <div className="min-h-screen bg-background">
+        <DashboardHeader />
+        <main className="container mx-auto px-6 py-8">
+          <div className="text-center py-12">
+            <p className="text-destructive">Paciente no encontrado</p>
+            <Button onClick={() => navigate('/patient-list')} className="mt-4">
+              Volver a la lista de pacientes
+            </Button>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       {/* Global Header */}
@@ -83,24 +173,26 @@ const PatientDetailedProfile = () => {
             {/* Left: Patient Name & Sign-up Date */}
             <div className="flex items-center space-x-4">
               <h1 className="font-serif text-2xl font-medium text-foreground">
-                Paz García
+                {patient?.name || 'Paciente'}
               </h1>
               <span className="text-muted-foreground">|</span>
               <div className="flex items-center space-x-2 text-muted-foreground">
                 <Calendar className="h-4 w-4" />
-                <span>Fecha de Alta: 01/07/2025</span>
+                <span>Fecha de Alta: {patient?.created_at ? formatDate(patient.created_at) : 'No disponible'}</span>
               </div>
             </div>
 
             {/* Right: Action Buttons */}
             <div className="flex items-center space-x-3">
-              <Button>
-                <Plus className="mr-2 h-4 w-4" />
-                Redactar Nuevo Informe
-              </Button>
+              <Link to={`/session-workspace?patientId=${patientId}`}>
+                <Button>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Redactar Nuevo Informe
+                </Button>
+              </Link>
               <Button variant="inforia">
                 <FileText className="mr-2 h-4 w-4" />
-                Generar Dosier de Alta
+                Generar Dossier de Alta
               </Button>
             </div>
           </div>
@@ -203,39 +295,12 @@ const PatientDetailedProfile = () => {
                     </label>
                     {isEditing ? (
                       <Input 
-                        value={patientData.birthDate}
-                        onChange={(e) => setPatientData({...patientData, birthDate: e.target.value})}
+                        type="date"
+                        value={patientData.birth_date}
+                        onChange={(e) => setPatientData({...patientData, birth_date: e.target.value})}
                       />
                     ) : (
-                      <p className="text-foreground">{patientData.birthDate}</p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground block mb-1">
-                      Dirección
-                    </label>
-                    {isEditing ? (
-                      <Input 
-                        value={patientData.address}
-                        onChange={(e) => setPatientData({...patientData, address: e.target.value})}
-                      />
-                    ) : (
-                      <p className="text-foreground">{patientData.address}</p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground block mb-1">
-                      Contacto de Emergencia
-                    </label>
-                    {isEditing ? (
-                      <Input 
-                        value={patientData.emergencyContact}
-                        onChange={(e) => setPatientData({...patientData, emergencyContact: e.target.value})}
-                      />
-                    ) : (
-                      <p className="text-foreground">{patientData.emergencyContact}</p>
+                      <p className="text-foreground">{formatDate(patientData.birth_date)}</p>
                     )}
                   </div>
                 </div>
@@ -340,28 +405,42 @@ const PatientDetailedProfile = () => {
                   Historial de Informes
                 </h3>
                 <div className="space-y-3 max-h-64 overflow-y-auto custom-scrollbar">
-                  {[
-                    { date: "15/07/2025", title: "Informe de Seguimiento", status: "Completado" },
-                    { date: "08/07/2025", title: "Evaluación Inicial", status: "Completado" },
-                    { date: "01/07/2025", title: "Informe de Admisión", status: "Completado" }
-                  ].map((report, index) => (
-                    <Button 
-                      key={index} 
-                      variant="ghost" 
-                      className="w-full h-auto p-3 bg-muted/50 hover:bg-muted border border-module-border rounded-md justify-start"
-                      onClick={() => console.log(`Abriendo informe: ${report.title}`)}
-                    >
-                      <div className="flex items-center justify-between w-full">
-                        <div className="text-left">
-                          <p className="font-medium text-foreground">{report.title}</p>
-                          <p className="text-sm text-muted-foreground">{report.date}</p>
+                  {reportsLoading ? (
+                    <div className="flex items-center justify-center py-8">
+                      <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                    </div>
+                  ) : reports && reports.length > 0 ? (
+                    reports.map((report, index) => (
+                      <Button 
+                        key={report.id} 
+                        variant="ghost" 
+                        className="w-full h-auto p-3 bg-muted/50 hover:bg-muted border border-module-border rounded-md justify-start"
+                        onClick={() => console.log(`Abriendo informe: ${report.title}`)}
+                      >
+                        <div className="flex items-center justify-between w-full">
+                          <div className="text-left">
+                            <p className="font-medium text-foreground">{report.title}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {formatDate(report.created_at)}
+                            </p>
+                          </div>
+                          <Badge variant="secondary" className="text-xs">
+                            {report.status === 'completed' ? 'Completado' : 'En proceso'}
+                          </Badge>
                         </div>
-                        <Badge variant="secondary" className="text-xs">
-                          {report.status}
-                        </Badge>
-                      </div>
-                    </Button>
-                  ))}
+                      </Button>
+                    ))
+                  ) : (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <p>No hay informes disponibles</p>
+                      <Link to={`/session-workspace?patientId=${patientId}`}>
+                        <Button variant="outline" size="sm" className="mt-2">
+                          <Plus className="mr-2 h-4 w-4" />
+                          Crear primer informe
+                        </Button>
+                      </Link>
+                    </div>
+                  )}
                 </div>
               </div>
 
