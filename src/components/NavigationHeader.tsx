@@ -1,4 +1,4 @@
-import { Menu, User, Search, Calendar, Users, Plus, HelpCircle } from "lucide-react";
+import { Menu, User, Search, Calendar, Users, Plus, HelpCircle, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -10,9 +10,43 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
 export const NavigationHeader = () => {
   const navigate = useNavigate();
+  const { user, signOut } = useAuth();
+  const { toast } = useToast();
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      toast({
+        title: "Sesión cerrada",
+        description: "Has cerrado sesión correctamente",
+      });
+      navigate("/auth");
+    } catch (error) {
+      console.error('Error signing out:', error);
+      toast({
+        title: "Error",
+        description: "Error al cerrar sesión",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const getUserInitials = () => {
+    if (user?.user_metadata?.full_name) {
+      return user.user_metadata.full_name
+        .split(' ')
+        .map((name: string) => name[0])
+        .join('')
+        .toUpperCase()
+        .slice(0, 2);
+    }
+    return user?.email?.slice(0, 2).toUpperCase() || 'U';
+  };
 
   return (
     <header className="h-16 bg-card border-b border-module-border px-6 flex items-center justify-between sticky top-0 z-50">
@@ -78,17 +112,47 @@ export const NavigationHeader = () => {
           </DropdownMenuContent>
         </DropdownMenu>
 
-        {/* User Avatar - Direct Link */}
-        <Link to="/my-account">
-          <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-            <Avatar className="h-8 w-8">
-              <AvatarImage src="/placeholder.svg" alt="Usuario" />
-              <AvatarFallback className="bg-primary text-primary-foreground">
-                <User className="h-4 w-4" />
-              </AvatarFallback>
-            </Avatar>
-          </Button>
-        </Link>
+        {/* User Avatar Menu */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+              <Avatar className="h-8 w-8">
+                <AvatarImage 
+                  src={user?.user_metadata?.avatar_url} 
+                  alt={user?.user_metadata?.full_name || "Usuario"} 
+                />
+                <AvatarFallback className="bg-primary text-primary-foreground font-sans text-sm">
+                  {getUserInitials()}
+                </AvatarFallback>
+              </Avatar>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56 bg-card border-module-border">
+            <div className="px-3 py-2">
+              <p className="text-sm font-medium text-foreground">
+                {user?.user_metadata?.full_name || "Usuario"}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {user?.email}
+              </p>
+            </div>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem className="font-sans cursor-pointer hover:bg-secondary">
+              <Link to="/my-account" className="w-full flex items-center">
+                <User className="mr-2 h-4 w-4" />
+                Mi Cuenta
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem 
+              className="font-sans cursor-pointer hover:bg-secondary text-destructive focus:text-destructive"
+              onClick={handleSignOut}
+            >
+              <LogOut className="mr-2 h-4 w-4" />
+              Cerrar Sesión
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </header>
   );
