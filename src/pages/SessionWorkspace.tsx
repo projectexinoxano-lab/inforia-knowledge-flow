@@ -2,11 +2,14 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { NavigationHeader } from "@/components/NavigationHeader";
-import { Play, Square, Upload, FileAudio, Volume2, Trash2, Loader2, Sparkles } from "lucide-react";
+import { Play, Square, Upload, FileAudio, Volume2, Trash2, Loader2, Sparkles, UserPlus, Brain } from "lucide-react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { usePatient } from "@/hooks/usePatients";
 import { useToast } from "@/hooks/use-toast";
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { creditsService } from '@/services/credits';
@@ -20,7 +23,33 @@ const SessionWorkspace = () => {
   const queryClient = useQueryClient();
   
   const patientId = searchParams.get('patientId');
-  const { data: patient, isLoading: patientLoading } = usePatient(patientId || '');
+  
+  // Hook para obtener pacientes reales
+  const { data: patients = [], isLoading: loadingPatients } = useQuery({
+    queryKey: ['patients'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('patients')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  // Estado para paciente seleccionado
+  const [selectedPatient, setSelectedPatient] = useState<any>(null);
+  
+  // Si hay patientId en URL, seleccionar ese paciente
+  useEffect(() => {
+    if (patientId && patients.length > 0) {
+      const patient = patients.find(p => p.id === patientId);
+      if (patient) {
+        setSelectedPatient(patient);
+      }
+    }
+  }, [patientId, patients]);
   
   const [isRecording, setIsRecording] = useState(false);
   const [timer, setTimer] = useState("00:00");
@@ -65,7 +94,7 @@ const SessionWorkspace = () => {
   };
 
   const handleGenerateReport = async () => {
-    if (!patient || !notes.trim()) {
+    if (!selectedPatient || !notes.trim()) {
       toast({
         title: "Datos incompletos",
         description: "Por favor selecciona un paciente y añade notas de la sesión",
@@ -93,8 +122,8 @@ const SessionWorkspace = () => {
       // Llamada a Edge Function
       const { data, error } = await supabase.functions.invoke('generate-report', {
         body: {
-          patient_id: patient.id,
-          patient_name: patient.name,
+          patient_id: selectedPatient.id,
+          patient_name: selectedPatient.name,
           session_notes: notes.trim(),
           report_type: reportType,
           input_type: hasFinishedRecording ? 'voice' : 'text'
@@ -127,14 +156,15 @@ const SessionWorkspace = () => {
       setHasFinishedRecording(false);
       setFinalDuration('');
       setTimer("00:00");
+      setSelectedPatient(null);
       
       // Invalidar queries para refrescar datos
       queryClient.invalidateQueries({ queryKey: ['reports'] });
-      queryClient.invalidateQueries({ queryKey: ['patient-reports', patient.id] });
+      queryClient.invalidateQueries({ queryKey: ['patient-reports', selectedPatient.id] });
       queryClient.invalidateQueries({ queryKey: ['user-profile'] });
 
       // Navegar al perfil del paciente
-      navigate(`/patient-detailed-profile?id=${patient.id}`);
+      navigate(`/patient-detailed-profile?id=${selectedPatient.id}`);
 
     } catch (error) {
       console.error('💥 Error completo:', error);
@@ -157,29 +187,13 @@ const SessionWorkspace = () => {
     });
   };
 
-  if (patientLoading) {
+  if (loadingPatients) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-[#FBF9F6]">
         <NavigationHeader />
         <main className="container mx-auto px-6 py-12 max-w-4xl">
           <div className="flex items-center justify-center h-64">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          </div>
-        </main>
-      </div>
-    );
-  }
-
-  if (!patient && patientId) {
-    return (
-      <div className="min-h-screen bg-background">
-        <NavigationHeader />
-        <main className="container mx-auto px-6 py-12 max-w-4xl">
-          <div className="text-center py-12">
-            <p className="text-destructive">Paciente no encontrado</p>
-            <Button onClick={() => navigate('/patient-list')} className="mt-4">
-              Volver a la lista de pacientes
-            </Button>
+            <Loader2 className="h-8 w-8 animate-spin text-[#2E403B]" />
           </div>
         </main>
       </div>
@@ -187,7 +201,7 @@ const SessionWorkspace = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-[#FBF9F6]">
       {/* Global Header for consistency */}
       <NavigationHeader />
 
@@ -196,16 +210,92 @@ const SessionWorkspace = () => {
         <div className="space-y-8">
           {/* Page Header - Context */}
           <div className="text-center space-y-4">
-            <h1 className="font-serif text-3xl font-medium text-foreground">
-              Registrando Sesión para: {patient?.name || 'Paciente'} - {new Date().toLocaleDateString('es-ES')}
+            <h1 className="font-lora text-3xl font-bold text-[#2E403B]">
+              Espacio de Sesión Clínica
             </h1>
+            <p className="text-[#333333]/70 font-nunito-sans">
+              {new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+            </p>
+          </div>
+
+          {/* Selector de Pacientes */}
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="patient-select" className="text-base font-medium text-[#2E403B] font-lora">
+                Seleccionar Paciente
+              </Label>
+              <Select
+                value={selectedPatient?.id || ""}
+                onValueChange={(value) => {
+                  const patient = patients.find(p => p.id === value);
+                  setSelectedPatient(patient);
+                }}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder={loadingPatients ? "Cargando pacientes..." : "Selecciona un paciente"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {patients.map((patient) => (
+                    <SelectItem key={patient.id} value={patient.id}>
+                      <div className="flex items-center space-x-2">
+                        <span className="font-medium">{patient.name}</span>
+                        {patient.email && (
+                          <span className="text-sm text-muted-foreground">({patient.email})</span>
+                        )}
+                      </div>
+                    </SelectItem>
+                  ))}
+                  {patients.length === 0 && !loadingPatients && (
+                    <SelectItem value="no-patients" disabled>
+                      No hay pacientes. Crear uno primero.
+                    </SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {selectedPatient && (
+              <Card className="p-4 bg-[#2E403B]/5 border-[#2E403B]/20">
+                <div className="flex items-center space-x-3">
+                  <div className="h-10 w-10 bg-[#2E403B] rounded-full flex items-center justify-center">
+                    <span className="text-white font-semibold">
+                      {selectedPatient.name.charAt(0).toUpperCase()}
+                    </span>
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-[#2E403B] font-lora">{selectedPatient.name}</h4>
+                    <p className="text-sm text-[#333333]/70 font-nunito-sans">
+                      {selectedPatient.email || 'Sin email'} • 
+                      Creado: {new Date(selectedPatient.created_at).toLocaleDateString('es-ES')}
+                    </p>
+                  </div>
+                </div>
+              </Card>
+            )}
+
+            {!selectedPatient && (
+              <div className="text-center py-8 text-[#333333]/70">
+                <p className="font-nunito-sans">Selecciona un paciente para comenzar la sesión</p>
+                <Button 
+                  variant="outline" 
+                  className="mt-2 border-[#2E403B] text-[#2E403B] hover:bg-[#2E403B] hover:text-white"
+                  onClick={() => window.location.href = '/new-patient'}
+                >
+                  <UserPlus className="mr-2 h-4 w-4" />
+                  Crear Nuevo Paciente
+                </Button>
+              </div>
+            )}
+          </div>
             
-            {/* Report Type Selection */}
+          {/* Report Type Selection */}
+          {selectedPatient && (
             <div className="flex justify-center gap-4">
               <Button
                 variant={reportType === 'primera_visita' ? 'default' : 'outline'}
                 onClick={() => setReportType('primera_visita')}
                 size="sm"
+                className={reportType === 'primera_visita' ? 'bg-[#2E403B] hover:bg-[#800020]' : 'border-[#2E403B] text-[#2E403B] hover:bg-[#2E403B] hover:text-white'}
               >
                 Primera Visita
               </Button>
@@ -213,11 +303,12 @@ const SessionWorkspace = () => {
                 variant={reportType === 'seguimiento' ? 'default' : 'outline'}
                 onClick={() => setReportType('seguimiento')}
                 size="sm"
+                className={reportType === 'seguimiento' ? 'bg-[#2E403B] hover:bg-[#800020]' : 'border-[#2E403B] text-[#2E403B] hover:bg-[#2E403B] hover:text-white'}
               >
                 Seguimiento
               </Button>
             </div>
-          </div>
+          )}
 
           {/* Recording Control Bar */}
           <div className="bg-card border border-module-border rounded-lg p-6">
@@ -283,17 +374,19 @@ const SessionWorkspace = () => {
           )}
 
           {/* Session Notes Area */}
-          <div className="space-y-4">
-            <h2 className="font-serif text-xl font-medium text-foreground">
-              Notas de Sesión
-            </h2>
-            <Textarea 
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="Escribe aquí tus notas. El sistema las sincronizará automáticamente con la grabación."
-              className="min-h-[400px] text-base resize-none font-sans"
-            />
-          </div>
+          {selectedPatient && (
+            <div className="space-y-4">
+              <h2 className="font-lora text-xl font-bold text-[#2E403B]">
+                Notas de Sesión
+              </h2>
+              <Textarea 
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="Escribe aquí tus notas de la sesión. El sistema generará automáticamente un informe profesional basado en tu contenido."
+                className="min-h-[400px] text-base resize-none font-nunito-sans border-[#2E403B]/20 focus:border-[#2E403B]"
+              />
+            </div>
+          )}
 
           {/* Additional Files Section */}
           <div className="space-y-4">
@@ -313,35 +406,37 @@ const SessionWorkspace = () => {
           </div>
 
           {/* Final Action Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center pt-8">
-            <Button 
-              variant="secondary"
-              size="lg" 
-              className="h-12 px-8 text-base font-medium"
-              onClick={handleSaveDraft}
-              disabled={!notes.trim()}
-            >
-              Guardar Borrador
-            </Button>
-            <Button 
-              size="lg" 
-              className="h-12 px-8 text-base font-medium"
-              onClick={handleGenerateReport}
-              disabled={!notes.trim() || isGenerating}
-            >
-              {isGenerating ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Generando Informe...
-                </>
-              ) : (
-                <>
-                  <Sparkles className="mr-2 h-4 w-4" />
-                  Generar Informe con IA
-                </>
-              )}
-            </Button>
-          </div>
+          {selectedPatient && (
+            <div className="flex flex-col sm:flex-row gap-4 justify-center pt-8">
+              <Button 
+                variant="secondary"
+                size="lg" 
+                className="h-12 px-8 text-base font-medium border-[#333333] text-[#333333] hover:bg-[#333333] hover:text-white"
+                onClick={handleSaveDraft}
+                disabled={!notes.trim()}
+              >
+                Guardar Borrador
+              </Button>
+              <Button 
+                size="lg" 
+                className="h-12 px-8 text-base font-medium bg-[#2E403B] hover:bg-[#800020] text-white"
+                onClick={handleGenerateReport}
+                disabled={!selectedPatient || !notes.trim() || isGenerating}
+              >
+                {isGenerating ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Generando informe con IA...
+                  </>
+                ) : (
+                  <>
+                    <Brain className="mr-2 h-4 w-4" />
+                    Generar Informe Inteligente
+                  </>
+                )}
+              </Button>
+            </div>
+          )}
         </div>
       </main>
     </div>
