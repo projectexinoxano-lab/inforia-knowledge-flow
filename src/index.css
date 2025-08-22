@@ -138,6 +138,11 @@ All colors MUST be HSL for consistency.
     transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
   }
 
+  /* Hover Scale Animation */
+  .hover-scale {
+    @apply transition-transform duration-200 hover:scale-105;
+  }
+
   /* Custom scrollbar */
   .custom-scrollbar::-webkit-scrollbar {
     width: 6px;
