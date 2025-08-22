@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { NavigationHeader } from "@/components/NavigationHeader";
+import { CreditsStatus } from '@/components/CreditsStatus';
 
 const MyAccount = () => {
   const [activeTab, setActiveTab] = useState("professional");
@@ -32,13 +33,27 @@ const MyAccount = () => {
   const usagePercentage = (mockUser.reportsUsed / mockUser.reportsTotal) * 100;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-[#FBF9F6]">
       <NavigationHeader />
       
       <div className="container mx-auto px-6 py-8">
-        <h1 className="font-serif text-3xl font-medium text-foreground mb-8">Mi Cuenta</h1>
-        
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        {/* Título */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-lora font-bold text-[#2E403B]">Mi Cuenta</h1>
+          <p className="text-[#333333]/70 font-nunito-sans mt-2">
+            Gestiona tu perfil, suscripción y configuración
+          </p>
+        </div>
+
+        {/* Estado de Suscripción */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          <div className="lg:col-span-1">
+            <CreditsStatus />
+          </div>
+          
+          <div className="lg:col-span-2">
+            {/* Contenido principal será el sistema de tabs */}
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-3 mb-8">
             <TabsTrigger value="professional" className="font-sans">
               Mis Datos Profesionales
@@ -284,6 +299,8 @@ const MyAccount = () => {
             </div>
           </TabsContent>
         </Tabs>
+          </div>
+        </div>
       </div>
     </div>
   );
