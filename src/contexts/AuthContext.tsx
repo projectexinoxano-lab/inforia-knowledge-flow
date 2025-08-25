@@ -26,8 +26,6 @@ interface AuthContextType {
   loading: boolean;
   isAuthenticated: boolean;
   signInWithGoogle: () => Promise<void>;
-  signInWithEmail: (email: string, password: string) => Promise<void>;
-  signUpWithEmail: (email: string, password: string, fullName?: string) => Promise<void>;
   signOut: () => Promise<void>;
   updateProfile: (updates: Partial<UserProfile>) => Promise<void>;
 }
@@ -112,53 +110,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const signInWithEmail = async (email: string, password: string) => {
-    try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      if (error) {
-        if (error.message.includes('Invalid login credentials')) {
-          toast.error('Credenciales incorrectas');
-        } else {
-          toast.error('Error al iniciar sesión');
-        }
-        throw error;
-      }
-      toast.success('¡Bienvenido a INFORIA!');
-    } catch (error) {
-      console.error('Email sign in error:', error);
-      throw error;
-    }
-  };
-
-  const signUpWithEmail = async (email: string, password: string, fullName?: string) => {
-    try {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/`,
-          data: {
-            full_name: fullName,
-          }
-        }
-      });
-      if (error) {
-        if (error.message.includes('User already registered')) {
-          toast.error('El usuario ya está registrado');
-        } else {
-          toast.error('Error al crear la cuenta');
-        }
-        throw error;
-      }
-      toast.success('¡Cuenta creada! Revisa tu email para confirmar.');
-    } catch (error) {
-      console.error('Email sign up error:', error);
-      throw error;
-    }
-  };
 
   const signOut = async () => {
     try {
@@ -213,8 +164,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       loading,
       isAuthenticated,
       signInWithGoogle,
-      signInWithEmail,
-      signUpWithEmail,
       signOut,
       updateProfile
     }}>

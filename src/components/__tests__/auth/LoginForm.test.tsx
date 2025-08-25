@@ -6,8 +6,6 @@ import { LoginForm } from '@/components/auth/LoginForm'
 vi.mock('@/contexts/AuthContext', () => ({
   useAuth: () => ({
     signInWithGoogle: vi.fn(),
-    signInWithEmail: vi.fn(),
-    signUpWithEmail: vi.fn(),
     loading: false
   })
 }))
@@ -31,51 +29,15 @@ describe('LoginForm', () => {
     expect(screen.getByText('iNFORiA')).toBeInTheDocument()
     expect(screen.getByText('Puesto de Mando Clínico')).toBeInTheDocument()
     expect(screen.getByText('Continuar con Google')).toBeInTheDocument()
+    expect(screen.getByText('Acceso Seguro Requerido')).toBeInTheDocument()
   })
 
-  it('shows both signin and signup tabs', () => {
+  it('shows security explanation', () => {
     render(<LoginForm />)
     
-    expect(screen.getByText('Iniciar Sesión')).toBeInTheDocument()
-    expect(screen.getByText('Crear Cuenta')).toBeInTheDocument()
-  })
-
-  it('handles email signin form submission', async () => {
-    const mockSignInWithEmail = vi.fn()
-    vi.doMock('@/contexts/AuthContext', () => ({
-      useAuth: () => ({
-        signInWithEmail: mockSignInWithEmail,
-        signInWithGoogle: vi.fn(),
-        signUpWithEmail: vi.fn(),
-        loading: false
-      })
-    }))
-
-    render(<LoginForm />)
-    
-    // Fill signin form
-    const emailInput = screen.getByPlaceholderText('tu@email.com')
-    const passwordInput = screen.getByPlaceholderText('••••••••')
-    
-    fireEvent.change(emailInput, { target: { value: 'test@example.com' } })
-    fireEvent.change(passwordInput, { target: { value: 'password123' } })
-    
-    const submitButton = screen.getByRole('button', { name: /iniciar sesión/i })
-    fireEvent.click(submitButton)
-
-    // Form should be submitted (verificar en implementación real)
-    await waitFor(() => {
-      expect(emailInput).toHaveValue('test@example.com')
-    })
-  })
-
-  it('handles signup tab switch', () => {
-    render(<LoginForm />)
-    
-    const signupTab = screen.getByText('Crear Cuenta')
-    fireEvent.click(signupTab)
-    
-    expect(screen.getByPlaceholderText('Dr. María García')).toBeInTheDocument()
+    expect(screen.getByText(/INFORIA necesita permisos de Google Drive/)).toBeInTheDocument()
+    expect(screen.getByText(/Tus datos permanecen en tu Google Drive/)).toBeInTheDocument()
+    expect(screen.getByText(/Modelo Zero-Knowledge para máxima privacidad/)).toBeInTheDocument()
   })
 
   it('shows Google sign in button', async () => {
@@ -83,8 +45,6 @@ describe('LoginForm', () => {
     vi.doMock('@/contexts/AuthContext', () => ({
       useAuth: () => ({
         signInWithGoogle: mockSignInWithGoogle,
-        signInWithEmail: vi.fn(),
-        signUpWithEmail: vi.fn(),
         loading: false
       })
     }))

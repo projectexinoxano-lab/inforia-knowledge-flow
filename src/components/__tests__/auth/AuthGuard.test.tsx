@@ -34,8 +34,6 @@ describe('AuthGuard', () => {
       user: null,
       session: null,
       signInWithGoogle: vi.fn(),
-      signInWithEmail: vi.fn(),
-      signUpWithEmail: vi.fn(),
       signOut: vi.fn(),
       updateProfile: vi.fn()
     })
@@ -60,8 +58,6 @@ describe('AuthGuard', () => {
       user: { id: '1' } as any,
       session: {} as any,
       signInWithGoogle: vi.fn(),
-      signInWithEmail: vi.fn(),
-      signUpWithEmail: vi.fn(),
       signOut: vi.fn(),
       updateProfile: vi.fn()
     })
@@ -86,8 +82,6 @@ describe('AuthGuard', () => {
       user: null,
       session: null,
       signInWithGoogle: vi.fn(),
-      signInWithEmail: vi.fn(),
-      signUpWithEmail: vi.fn(),
       signOut: vi.fn(),
       updateProfile: vi.fn()
     })
@@ -112,8 +106,6 @@ describe('AuthGuard', () => {
       user: null,
       session: null,
       signInWithGoogle: vi.fn(),
-      signInWithEmail: vi.fn(),
-      signUpWithEmail: vi.fn(),
       signOut: vi.fn(),
       updateProfile: vi.fn()
     })
