@@ -1,23 +1,11 @@
-import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Separator } from '@/components/ui/separator';
-import { Loader2, Mail, Lock, User } from 'lucide-react';
+import { Loader2, Shield, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
 export function LoginForm() {
-  const { signInWithGoogle, signInWithEmail, signUpWithEmail, loading } = useAuth();
-  const [emailLoading, setEmailLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-    fullName: '',
-    confirmPassword: ''
-  });
+  const { signInWithGoogle, loading } = useAuth();
 
   const handleGoogleSignIn = async () => {
     try {
@@ -27,92 +15,65 @@ export function LoginForm() {
     }
   };
 
-  const handleEmailSignIn = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.email || !formData.password) {
-      toast.error('Por favor completa todos los campos');
-      return;
-    }
-
-    setEmailLoading(true);
-    try {
-      await signInWithEmail(formData.email, formData.password);
-    } catch (error) {
-      console.error('Email sign in failed:', error);
-    } finally {
-      setEmailLoading(false);
-    }
-  };
-
-  const handleEmailSignUp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.email || !formData.password || !formData.fullName) {
-      toast.error('Por favor completa todos los campos');
-      return;
-    }
-
-    if (formData.password !== formData.confirmPassword) {
-      toast.error('Las contraseñas no coinciden');
-      return;
-    }
-
-    if (formData.password.length < 6) {
-      toast.error('La contraseña debe tener al menos 6 caracteres');
-      return;
-    }
-
-    setEmailLoading(true);
-    try {
-      await signUpWithEmail(formData.email, formData.password, formData.fullName);
-    } catch (error) {
-      console.error('Email sign up failed:', error);
-    } finally {
-      setEmailLoading(false);
-    }
-  };
-
-  const handleInputChange = (field: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: e.target.value
-    }));
-  };
-
-  const isLoading = loading || emailLoading;
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-inforia-cream p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center space-y-2">
+      <Card className="w-full max-w-lg">
+        <CardHeader className="text-center space-y-4">
           <div className="flex items-center justify-center space-x-2 mb-4">
-            <div className="h-10 w-10 bg-gold rounded-full flex items-center justify-center">
-              <span className="text-primary font-bold text-lg font-serif">i</span>
+            <div className="h-12 w-12 bg-gold rounded-full flex items-center justify-center">
+              <span className="text-primary font-bold text-xl font-serif">i</span>
             </div>
-            <span className="text-2xl font-serif font-semibold text-primary">
+            <span className="text-3xl font-serif font-semibold text-primary">
               iNFORiA
             </span>
           </div>
-          <CardTitle className="text-xl font-serif text-primary">
+          <CardTitle className="text-2xl font-serif text-primary">
             Puesto de Mando Clínico
           </CardTitle>
-          <CardDescription className="text-inforia-graphite">
+          <CardDescription className="text-inforia-graphite text-base">
             para Psicólogos Profesionales
           </CardDescription>
         </CardHeader>
 
         <CardContent className="space-y-6">
+          {/* Explicación de por qué solo Google */}
+          <div className="bg-primary/5 border border-primary/20 rounded-lg p-4 space-y-3">
+            <div className="flex items-center gap-2 text-primary">
+              <Shield className="h-5 w-5" />
+              <span className="font-semibold">Acceso Seguro Requerido</span>
+            </div>
+            <p className="text-sm text-inforia-graphite">
+              INFORIA necesita permisos de Google Drive para guardar tus informes de forma segura 
+              en tu propia cuenta. Solo Google OAuth permite este acceso protegido.
+            </p>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-sm text-inforia-graphite">
+                <CheckCircle className="h-4 w-4 text-green-600" />
+                <span>Tus datos permanecen en tu Google Drive</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm text-inforia-graphite">
+                <CheckCircle className="h-4 w-4 text-green-600" />
+                <span>Modelo Zero-Knowledge para máxima privacidad</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm text-inforia-graphite">
+                <CheckCircle className="h-4 w-4 text-green-600" />
+                <span>Cumplimiento LOPD y secreto profesional</span>
+              </div>
+            </div>
+          </div>
+
           {/* Google Sign In */}
           <Button
             onClick={handleGoogleSignIn}
-            disabled={isLoading}
+            disabled={loading}
             variant="outline"
             size="lg"
-            className="w-full border-2 border-primary hover:bg-primary hover:text-primary-foreground"
+            className="w-full border-2 border-primary hover:bg-primary hover:text-primary-foreground text-base py-6"
           >
-            {isLoading ? (
-              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+            {loading ? (
+              <Loader2 className="mr-3 h-6 w-6 animate-spin" />
             ) : (
-              <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24">
+              <svg className="mr-3 h-6 w-6" viewBox="0 0 24 24">
                 <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                 <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
                 <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
@@ -121,159 +82,6 @@ export function LoginForm() {
             )}
             Continuar con Google
           </Button>
-
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <Separator className="w-full" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-card px-2 text-muted-foreground">
-                O continúa con email
-              </span>
-            </div>
-          </div>
-
-          {/* Email Forms */}
-          <Tabs defaultValue="signin" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="signin">Iniciar Sesión</TabsTrigger>
-              <TabsTrigger value="signup">Crear Cuenta</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="signin" className="space-y-4 mt-4">
-              <form onSubmit={handleEmailSignIn} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="signin-email">Email</Label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="signin-email"
-                      type="email"
-                      placeholder="tu@email.com"
-                      className="pl-10"
-                      value={formData.email}
-                      onChange={handleInputChange('email')}
-                      disabled={isLoading}
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="signin-password">Contraseña</Label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="signin-password"
-                      type="password"
-                      placeholder="••••••••"
-                      className="pl-10"
-                      value={formData.password}
-                      onChange={handleInputChange('password')}
-                      disabled={isLoading}
-                      required
-                    />
-                  </div>
-                </div>
-
-                <Button
-                  type="submit"
-                  disabled={isLoading}
-                  className="w-full"
-                  variant="inforia"
-                >
-                  {isLoading ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : null}
-                  Iniciar Sesión
-                </Button>
-              </form>
-            </TabsContent>
-
-            <TabsContent value="signup" className="space-y-4 mt-4">
-              <form onSubmit={handleEmailSignUp} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="signup-name">Nombre Completo</Label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="signup-name"
-                      type="text"
-                      placeholder="Dr. María García"
-                      className="pl-10"
-                      value={formData.fullName}
-                      onChange={handleInputChange('fullName')}
-                      disabled={isLoading}
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="signup-email">Email</Label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="signup-email"
-                      type="email"
-                      placeholder="tu@email.com"
-                      className="pl-10"
-                      value={formData.email}
-                      onChange={handleInputChange('email')}
-                      disabled={isLoading}
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="signup-password">Contraseña</Label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="signup-password"
-                      type="password"
-                      placeholder="••••••••"
-                      className="pl-10"
-                      value={formData.password}
-                      onChange={handleInputChange('password')}
-                      disabled={isLoading}
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="signup-confirm">Confirmar Contraseña</Label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="signup-confirm"
-                      type="password"
-                      placeholder="••••••••"
-                      className="pl-10"
-                      value={formData.confirmPassword}
-                      onChange={handleInputChange('confirmPassword')}
-                      disabled={isLoading}
-                      required
-                    />
-                  </div>
-                </div>
-
-                <Button
-                  type="submit"
-                  disabled={isLoading}
-                  className="w-full"
-                  variant="inforia"
-                >
-                  {isLoading ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : null}
-                  Crear Cuenta
-                </Button>
-              </form>
-            </TabsContent>
-          </Tabs>
 
           <div className="text-xs text-muted-foreground text-center space-y-2">
             <p>
