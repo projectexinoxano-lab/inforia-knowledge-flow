@@ -19,7 +19,7 @@ const PatientDetailedProfile = () => {
   
   const patientId = searchParams.get('id');
   const { data: patient, isLoading: patientLoading } = usePatient(patientId || '');
-  const { data: reports, isLoading: reportsLoading } = usePatientReports(patientId || '');
+  const { data: reports, loading: reportsLoading } = usePatientReports(patientId || '');
   const updatePatientMutation = useUpdatePatient();
   const deletePatientMutation = useDeletePatient();
   
