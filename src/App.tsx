@@ -15,6 +15,7 @@ import PatientDetailedProfile from "./pages/PatientDetailedProfile";
 import PatientList from "./pages/PatientList";
 import NewPatient from "./pages/NewPatient";
 import MyAccount from "./pages/MyAccount";
+import ReportWorkspace from '@/pages/ReportWorkspace';
 import FAQs from "./pages/FAQs";
 import NotFound from "./pages/NotFound";
 
@@ -60,6 +61,16 @@ function AppRoutes() {
       <Route path="/faqs" element={
         <AuthGuard>
           <FAQs />
+        </AuthGuard>
+      } />
+      <Route path="/reports/new" element={
+        <AuthGuard>
+          <ReportWorkspace />
+        </AuthGuard>
+      } />
+      <Route path="/reports/new/:patientId" element={
+        <AuthGuard>
+          <ReportWorkspace />
         </AuthGuard>
       } />
       <Route path="*" element={<NotFound />} />
