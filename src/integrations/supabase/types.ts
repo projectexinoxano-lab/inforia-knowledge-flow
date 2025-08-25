@@ -56,34 +56,46 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          clinic_name: string | null
           created_at: string | null
           credits_limit: number | null
           credits_used: number | null
           full_name: string | null
           id: string
+          onboarding_completed: boolean | null
+          phone: string | null
           plan_type: string | null
+          professional_license: string | null
           subscription_status: string | null
           updated_at: string | null
         }
         Insert: {
           avatar_url?: string | null
+          clinic_name?: string | null
           created_at?: string | null
           credits_limit?: number | null
           credits_used?: number | null
           full_name?: string | null
           id: string
+          onboarding_completed?: boolean | null
+          phone?: string | null
           plan_type?: string | null
+          professional_license?: string | null
           subscription_status?: string | null
           updated_at?: string | null
         }
         Update: {
           avatar_url?: string | null
+          clinic_name?: string | null
           created_at?: string | null
           credits_limit?: number | null
           credits_used?: number | null
           full_name?: string | null
           id?: string
+          onboarding_completed?: boolean | null
+          phone?: string | null
           plan_type?: string | null
+          professional_license?: string | null
           subscription_status?: string | null
           updated_at?: string | null
         }
