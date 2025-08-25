@@ -1,172 +1,89 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
-import type { Report, ReportInsert } from '@/services/database';
+import { useState, useEffect } from 'react';
+import { ReportsService } from '@/services/reports';
 
-export const useReports = () => {
-  return useQuery({
-    queryKey: ['reports'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('reports')
-        .select(`
-          *,
-          patients!inner(
-            id,
-            name,
-            email
-          )
-        `)
-        .order('created_at', { ascending: false });
+export interface Report {
+  id: string;
+  title: string;
+  content: string;
+  report_type: string;
+  input_type: string;
+  status: string;
+  created_at: string;
+  updated_at: string;
+  patients?: {
+    name: string;
+    birth_date?: string;
+  };
+}
 
-      if (error) throw error;
-      return data;
-    },
-  });
-};
+export function useReports() {
+  const [reports, setReports] = useState<Report[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchReports = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await ReportsService.getUserReports();
+      setReports(data || []);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error desconocido');
+      console.error('Error fetching reports:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deleteReport = async (reportId: string) => {
+    try {
+      await ReportsService.deleteReport(reportId);
+      setReports(prev => prev.filter(r => r.id !== reportId));
+      return true;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error eliminando informe');
+      return false;
+    }
+  };
+
+  useEffect(() => {
+    fetchReports();
+  }, []);
+
+  return {
+    data: reports,
+    reports,
+    loading,
+    error,
+    fetchReports,
+    deleteReport,
+    refresh: fetchReports
+  };
+}
 
 export const usePatientReports = (patientId: string) => {
-  return useQuery({
-    queryKey: ['reports', patientId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('reports')
-        .select('*')
-        .eq('patient_id', patientId)
-        .order('created_at', { ascending: false });
+  const [reports, setReports] = useState<Report[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!patientId,
-  });
-};
+  useEffect(() => {
+    const fetchPatientReports = async () => {
+      try {
+        setLoading(true);
+        const allReports = await ReportsService.getUserReports();
+        const patientReports = allReports?.filter(r => r.patient_id === patientId) || [];
+        setReports(patientReports);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Error desconocido');
+      } finally {
+        setLoading(false);
+      }
+    };
 
-export const useGenerateReport = () => {
-  const queryClient = useQueryClient();
-  const { toast } = useToast();
+    if (patientId) {
+      fetchPatientReports();
+    }
+  }, [patientId]);
 
-  return useMutation({
-    mutationFn: async ({ 
-      patientId, 
-      sessionNotes, 
-      reportType = 'seguimiento',
-      audioTranscription 
-    }: { 
-      patientId: string; 
-      sessionNotes: string; 
-      reportType?: string;
-      audioTranscription?: string;
-    }) => {
-      // First create a draft report
-      const { data: draftReport, error: draftError } = await supabase
-        .from('reports')
-        .insert({
-          patient_id: patientId,
-          user_id: (await supabase.auth.getUser()).data.user?.id!,
-          title: `Informe ${reportType === 'primera_visita' ? 'Primera Visita' : 'de Seguimiento'} - ${new Date().toLocaleDateString('es-ES')}`,
-          report_type: reportType,
-          input_type: audioTranscription ? 'audio' : 'text',
-          status: 'generating',
-          audio_transcription: audioTranscription || null,
-        })
-        .select()
-        .single();
-
-      if (draftError) throw draftError;
-
-      // Call the edge function to generate the report
-      const { data, error } = await supabase.functions.invoke('generate-report', {
-        body: {
-          patientId,
-          sessionNotes,
-          reportType,
-          reportId: draftReport.id
-        }
-      });
-
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['reports'] });
-      toast({
-        title: "Informe generado",
-        description: "El informe se ha generado correctamente con IA",
-      });
-    },
-    onError: (error: any) => {
-      console.error('Error generating report:', error);
-      toast({
-        title: "Error",
-        description: "Error al generar el informe: " + error.message,
-        variant: "destructive",
-      });
-    },
-  });
-};
-
-export const useUpdateReport = () => {
-  const queryClient = useQueryClient();
-  const { toast } = useToast();
-
-  return useMutation({
-    mutationFn: async ({ id, updates }: { id: string; updates: Partial<Report> }) => {
-      const { data, error } = await supabase
-        .from('reports')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['reports'] });
-      toast({
-        title: "Informe actualizado",
-        description: "El informe se ha actualizado correctamente",
-      });
-    },
-    onError: (error) => {
-      console.error('Error updating report:', error);
-      toast({
-        title: "Error",
-        description: "Error al actualizar el informe",
-        variant: "destructive",
-      });
-    },
-  });
-};
-
-export const useDeleteReport = () => {
-  const queryClient = useQueryClient();
-  const { toast } = useToast();
-
-  return useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('reports')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['reports'] });
-      toast({
-        title: "Informe eliminado",
-        description: "El informe se ha eliminado correctamente",
-      });
-    },
-    onError: (error) => {
-      console.error('Error deleting report:', error);
-      toast({
-        title: "Error",
-        description: "Error al eliminar el informe",
-        variant: "destructive",
-      });
-    },
-  });
+  return { data: reports, loading, error };
 };

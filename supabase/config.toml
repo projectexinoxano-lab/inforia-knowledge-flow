@@ -56,3 +56,6 @@ enable_sms_confirmations = false
 
 [functions.generate-report]
 verify_jwt = true
+
+[functions.transcribe-audio]
+verify_jwt = true
