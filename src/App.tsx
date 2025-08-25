@@ -4,10 +4,12 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "./contexts/AuthContext";
+import { AuthGuard } from "@/components/auth/AuthGuard";
 import Dashboard from "./pages/Dashboard";
 import Auth from "./pages/Auth";
+import Onboarding from "./pages/Onboarding";
 import SessionWorkspace from "./pages/SessionWorkspace";
 import PatientDetailedProfile from "./pages/PatientDetailedProfile";
 import PatientList from "./pages/PatientList";
@@ -18,58 +20,47 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth();
-  
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-bone flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-inforia"></div>
-      </div>
-    );
-  }
-  
-  return user ? <>{children}</> : <Navigate to="/auth" />;
-}
-
 function AppRoutes() {
   return (
     <Routes>
       <Route path="/auth" element={<Auth />} />
+      <Route path="/onboarding" element={<Onboarding />} />
+      
+      {/* Protected Routes */}
       <Route path="/" element={
-        <ProtectedRoute>
+        <AuthGuard>
           <Dashboard />
-        </ProtectedRoute>
+        </AuthGuard>
       } />
       <Route path="/session-workspace" element={
-        <ProtectedRoute>
+        <AuthGuard>
           <SessionWorkspace />
-        </ProtectedRoute>
+        </AuthGuard>
       } />
       <Route path="/patient-detailed-profile" element={
-        <ProtectedRoute>
+        <AuthGuard>
           <PatientDetailedProfile />
-        </ProtectedRoute>
+        </AuthGuard>
       } />
       <Route path="/patient-list" element={
-        <ProtectedRoute>
+        <AuthGuard>
           <PatientList />
-        </ProtectedRoute>
+        </AuthGuard>
       } />
       <Route path="/new-patient" element={
-        <ProtectedRoute>
+        <AuthGuard>
           <NewPatient />
-        </ProtectedRoute>
+        </AuthGuard>
       } />
       <Route path="/my-account" element={
-        <ProtectedRoute>
+        <AuthGuard>
           <MyAccount />
-        </ProtectedRoute>
+        </AuthGuard>
       } />
       <Route path="/faqs" element={
-        <ProtectedRoute>
+        <AuthGuard>
           <FAQs />
-        </ProtectedRoute>
+        </AuthGuard>
       } />
       <Route path="*" element={<NotFound />} />
     </Routes>
