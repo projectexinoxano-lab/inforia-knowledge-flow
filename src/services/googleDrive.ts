@@ -12,33 +12,33 @@ export interface DriveCreateResponse {
   fileId: string;
   webViewLink: string;
   success: boolean;
-  message?: string;
+  message: string;
 }
 
 export class GoogleDriveService {
-  private static readonly FOLDER_NAME = 'INFORIA Reports';
+  private static readonly FOLDER_NAME = 'iNFORiA_INFORMES';
   private static readonly SCOPES = [
     'https://www.googleapis.com/auth/drive.file',
-    'https://www.googleapis.com/auth/drive.folder'
+    'https://www.googleapis.com/auth/drive.folders',
+    'https://www.googleapis.com/auth/documents'
   ];
 
-  /**
-   * Obtiene el token de acceso actual del usuario autenticado
-   */
-  private async getAccessToken(): Promise<string | null> {
-    const { data: { session } } = await supabase.auth.getSession();
-    
-    if (!session?.provider_token) {
-      console.error('No hay token de Google disponible. El usuario debe re-autenticarse con permisos de Drive.');
+  async getAccessToken(): Promise<string | null> {
+    try {
+      const { data: { session }, error } = await supabase.auth.getSession();
+      
+      if (error || !session?.provider_token) {
+        console.error('No hay token de Google disponible:', error);
+        return null;
+      }
+
+      return session.provider_token;
+    } catch (error) {
+      console.error('Error obteniendo token:', error);
       return null;
     }
-
-    return session.provider_token;
   }
 
-  /**
-   * Verifica si el usuario tiene permisos de Google Drive
-   */
   async hasPermissions(): Promise<boolean> {
     const token = await this.getAccessToken();
     if (!token) return false;
@@ -58,15 +58,11 @@ export class GoogleDriveService {
     }
   }
 
-  /**
-   * Encuentra o crea la carpeta INFORIA Reports
-   */
   private async getOrCreateInforiaFolder(): Promise<string | null> {
     const token = await this.getAccessToken();
     if (!token) return null;
 
     try {
-      // Buscar carpeta existente
       const searchResponse = await fetch(
         `https://www.googleapis.com/drive/v3/files?q=name='${GoogleDriveService.FOLDER_NAME}' and mimeType='application/vnd.google-apps.folder' and trashed=false`,
         {
@@ -78,17 +74,15 @@ export class GoogleDriveService {
       );
 
       if (!searchResponse.ok) {
-        throw new Error('Error buscando carpeta INFORIA');
+        throw new Error('Error buscando carpeta iNFORiA_INFORMES');
       }
 
       const searchData = await searchResponse.json();
       
-      // Si existe, devolverla
       if (searchData.files && searchData.files.length > 0) {
         return searchData.files[0].id;
       }
 
-      // Si no existe, crearla
       const createResponse = await fetch('https://www.googleapis.com/drive/v3/files', {
         method: 'POST',
         headers: {
@@ -102,22 +96,187 @@ export class GoogleDriveService {
       });
 
       if (!createResponse.ok) {
-        throw new Error('Error creando carpeta INFORIA');
+        throw new Error('Error creando carpeta iNFORiA_INFORMES');
       }
 
       const createData = await createResponse.json();
-      console.log('✅ Carpeta INFORIA creada:', createData.id);
+      console.log('✅ Carpeta iNFORiA_INFORMES creada:', createData.id);
       
       return createData.id;
     } catch (error) {
-      console.error('Error gestionando carpeta INFORIA:', error);
+      console.error('Error gestionando carpeta iNFORiA_INFORMES:', error);
       return null;
     }
   }
 
-  /**
-   * Crea un Google Document con el contenido del informe
-   */
+  private async getOrCreatePatientFolder(patientName: string, patientId: string): Promise<string | null> {
+    const token = await this.getAccessToken();
+    if (!token) return null;
+
+    try {
+      const baseFolder = await this.getOrCreateInforiaFolder();
+      if (!baseFolder) return null;
+
+      const folderName = patientName.replace(/[<>:"/\\|?*]/g, '_').trim();
+      const searchName = `${folderName}_${patientId.substring(0, 8)}`;
+
+      const searchResponse = await fetch(
+        `https://www.googleapis.com/drive/v3/files?q=name='${searchName}' and '${baseFolder}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (!searchResponse.ok) {
+        throw new Error('Error buscando carpeta del paciente');
+      }
+
+      const searchData = await searchResponse.json();
+      
+      if (searchData.files && searchData.files.length > 0) {
+        return searchData.files[0].id;
+      }
+
+      const createResponse = await fetch('https://www.googleapis.com/drive/v3/files', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          name: searchName,
+          parents: [baseFolder],
+          mimeType: 'application/vnd.google-apps.folder'
+        })
+      });
+
+      if (!createResponse.ok) {
+        throw new Error('Error creando carpeta del paciente');
+      }
+
+      const createData = await createResponse.json();
+      console.log('✅ Carpeta del paciente creada en iNFORiA_INFORMES:', createData.id);
+      
+      return createData.id;
+    } catch (error) {
+      console.error('Error gestionando carpeta del paciente:', error);
+      return null;
+    }
+  }
+
+  async createPatientReport(
+    title: string, 
+    content: string, 
+    patientName: string,
+    patientId: string
+  ): Promise<DriveCreateResponse> {
+    try {
+      const token = await this.getAccessToken();
+      if (!token) {
+        return {
+          fileId: '',
+          webViewLink: '',
+          success: false,
+          message: 'No tienes permisos de Google Drive. Re-autentica tu cuenta.'
+        };
+      }
+
+      const patientFolderId = await this.getOrCreatePatientFolder(patientName, patientId);
+      if (!patientFolderId) {
+        return {
+          fileId: '',
+          webViewLink: '',
+          success: false,
+          message: 'Error creando carpeta del paciente'
+        };
+      }
+
+      const now = new Date();
+      const dateStr = now.toISOString().split('T')[0];
+      const fileName = `${dateStr} - ${title}`;
+
+      const metadata = {
+        name: fileName,
+        parents: [patientFolderId],
+        mimeType: 'application/vnd.google-apps.document'
+      };
+
+      const createResponse = await fetch('https://www.googleapis.com/drive/v3/files', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(metadata)
+      });
+
+      if (!createResponse.ok) {
+        throw new Error('Error creando documento en Drive');
+      }
+
+      const fileData = await createResponse.json();
+
+      const requests = [
+        {
+          insertText: {
+            location: { index: 1 },
+            text: `${title}\n\n${content}`
+          }
+        },
+        {
+          updateTextStyle: {
+            range: {
+              startIndex: 1,
+              endIndex: title.length + 1
+            },
+            textStyle: {
+              bold: true,
+              fontSize: { magnitude: 16, unit: 'PT' }
+            },
+            fields: 'bold,fontSize'
+          }
+        }
+      ];
+
+      const updateResponse = await fetch(
+        `https://docs.googleapis.com/v1/documents/${fileData.id}:batchUpdate`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ requests })
+        }
+      );
+
+      if (!updateResponse.ok) {
+        console.warn('Documento creado pero error al formatear contenido');
+      }
+
+      console.log('✅ Informe guardado en carpeta del paciente:', fileData.id);
+
+      return {
+        fileId: fileData.id,
+        webViewLink: `https://docs.google.com/document/d/${fileData.id}/edit`,
+        success: true,
+        message: 'Informe guardado exitosamente en Google Drive'
+      };
+
+    } catch (error) {
+      console.error('Error creando documento en Drive:', error);
+      return {
+        fileId: '',
+        webViewLink: '',
+        success: false,
+        message: error instanceof Error ? error.message : 'Error desconocido'
+      };
+    }
+  }
+
   async createReport(
     title: string, 
     content: string, 
@@ -144,14 +303,12 @@ export class GoogleDriveService {
         };
       }
 
-      // Crear metadatos del documento
       const metadata = {
         name: `${title}.gdoc`,
         parents: [folderId],
         mimeType: 'application/vnd.google-apps.document'
       };
 
-      // Crear documento vacío primero
       const createResponse = await fetch('https://www.googleapis.com/drive/v3/files', {
         method: 'POST',
         headers: {
@@ -167,7 +324,6 @@ export class GoogleDriveService {
 
       const fileData = await createResponse.json();
 
-      // Ahora insertar el contenido usando Google Docs API
       const requests = [
         {
           insertText: {
@@ -175,7 +331,6 @@ export class GoogleDriveService {
             text: `${title}\n\n${content}`
           }
         },
-        // Formatear el título
         {
           updateTextStyle: {
             range: {
@@ -227,9 +382,6 @@ export class GoogleDriveService {
     }
   }
 
-  /**
-   * Lista todos los informes de INFORIA
-   */
   async listReports(): Promise<GoogleDriveFile[]> {
     try {
       const token = await this.getAccessToken();
@@ -260,9 +412,36 @@ export class GoogleDriveService {
     }
   }
 
-  /**
-   * Verifica si un archivo específico existe
-   */
+  async listPatientReports(patientName: string, patientId: string): Promise<GoogleDriveFile[]> {
+    try {
+      const token = await this.getAccessToken();
+      if (!token) return [];
+
+      const patientFolderId = await this.getOrCreatePatientFolder(patientName, patientId);
+      if (!patientFolderId) return [];
+
+      const response = await fetch(
+        `https://www.googleapis.com/drive/v3/files?q='${patientFolderId}' in parents and mimeType='application/vnd.google-apps.document' and trashed=false&fields=files(id,name,webViewLink,webContentLink,createdTime)&orderBy=createdTime desc`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Error listando informes del paciente');
+      }
+
+      const data = await response.json();
+      return data.files || [];
+    } catch (error) {
+      console.error('Error listando informes del paciente:', error);
+      return [];
+    }
+  }
+
   async checkFileExists(fileId: string): Promise<boolean> {
     try {
       const token = await this.getAccessToken();
@@ -288,9 +467,6 @@ export class GoogleDriveService {
     }
   }
 
-  /**
-   * Solicita permisos adicionales de Google Drive
-   */
   async requestPermissions(): Promise<boolean> {
     try {
       const { error } = await supabase.auth.signInWithOAuth({
@@ -316,7 +492,18 @@ export class GoogleDriveService {
       return false;
     }
   }
+
+  async getPatientFolderUrl(patientName: string, patientId: string): Promise<string | null> {
+    try {
+      const patientFolderId = await this.getOrCreatePatientFolder(patientName, patientId);
+      if (!patientFolderId) return null;
+
+      return `https://drive.google.com/drive/folders/${patientFolderId}`;
+    } catch (error) {
+      console.error('Error obteniendo URL de carpeta del paciente:', error);
+      return null;
+    }
+  }
 }
 
-// Singleton instance
 export const googleDriveService = new GoogleDriveService();
