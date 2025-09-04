@@ -225,3 +225,83 @@ export function VoiceRecorder({
                 onClick={startRecording}
                 disabled={isDisabled}
                 className="w-full gap-2"
+                variant="default"
+              >
+                <Mic className="h-4 w-4" />
+                Iniciar Grabación
+              </Button>
+            ) : (
+              <Button
+                onClick={stopRecording}
+                className="w-full gap-2"
+                variant="destructive"
+              >
+                <Square className="h-4 w-4" />
+                Detener Grabación
+              </Button>
+            )}
+          </div>
+
+          {/* Upload de archivo */}
+          <div className="space-y-3">
+            <h4 className="text-sm font-medium text-muted-foreground">
+              📁 Cargar Archivo de Audio
+            </h4>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="audio/*"
+              onChange={handleFileUpload}
+              className="hidden"
+              disabled={isDisabled}
+            />
+            <Button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isDisabled}
+              className="w-full gap-2"
+              variant="outline"
+            >
+              <Upload className="h-4 w-4" />
+              Seleccionar Archivo
+            </Button>
+          </div>
+        </div>
+
+        {/* Controles de audio grabado */}
+        {audioBlob && (
+          <div className="p-4 bg-muted rounded-lg space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <FileAudio className="h-4 w-4" />
+                <span className="text-sm font-medium">Audio grabado</span>
+                <span className="text-xs text-muted-foreground">
+                  ({recordingDuration})
+                </span>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={togglePlayback}
+                >
+                  {isPlaying ? (
+                    <Pause className="h-3 w-3" />
+                  ) : (
+                    <Play className="h-3 w-3" />
+                  )}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={deleteRecording}
+                >
+                  <Trash2 className="h-3 w-3" />
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}

@@ -204,12 +204,6 @@ const ReportsViewer: React.FC<ReportsViewerProps> = ({
                         <Calendar className="w-4 h-4" />
                         {formatDate(report.created_at)}
                       </div>
-                      {!patientId && report.patient && (
-                        <div className="flex items-center gap-1">
-                          <User className="w-4 h-4" />
-                          {report.patient.name}
-                        </div>
-                      )}
                       <Badge variant="outline" className="text-xs">
                         {getReportTypeLabel(report.report_type)}
                       </Badge>
