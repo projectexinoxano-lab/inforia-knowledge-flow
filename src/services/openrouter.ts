@@ -1,10 +1,8 @@
 // Ruta: src/services/openrouter.ts
+import { supabase } from '@/integrations/supabase/client';
+
 interface OpenRouterResponse {
-  choices: {
-    message: {
-      content: string;
-    };
-  }[];
+  choices: { message: { content: string } }[];
 }
 
 interface WhisperResponse {
@@ -17,7 +15,6 @@ interface WhisperResponse {
 }
 
 export type ReportType = 'nuevo_paciente' | 'seguimiento' | 'alta_paciente';
-export type AIModel = 'openai/gpt-4o-mini' | 'meta-llama/llama-3.1-8b-instruct' | 'anthropic/claude-3-sonnet' | 'google/gemini-pro';
 
 export class OpenRouterService {
   private apiKey: string;
@@ -26,36 +23,42 @@ export class OpenRouterService {
   constructor() {
     this.apiKey = import.meta.env.VITE_OPENROUTER_API_KEY;
     if (!this.apiKey) {
-      throw new Error('OPENROUTER_API_KEY no configurada en variables de entorno');
+      throw new Error('VITE_OPENROUTER_API_KEY no configurada en variables de entorno');
     }
   }
 
   // Transcripción con Whisper via OpenRouter
   async transcribeAudio(audioBlob: Blob): Promise<string> {
-    const formData = new FormData();
-    formData.append('file', audioBlob, 'session_audio.wav');
-    formData.append('model', 'whisper-1');
-    formData.append('response_format', 'verbose_json');
-    formData.append('language', 'es');
-    formData.append('prompt', 'Esta es una sesión terapéutica en español. Incluye términos psicológicos y médicos.');
+    try {
+      const formData = new FormData();
+      formData.append('file', audioBlob, 'session_audio.wav');
+      formData.append('model', 'whisper-1');
+      formData.append('response_format', 'json');
+      formData.append('language', 'es');
+      formData.append('prompt', 'Esta es una sesión terapéutica en español. Incluye términos psicológicos y médicos.');
 
-    const response = await fetch(`${this.baseUrl}/audio/transcriptions`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${this.apiKey}`,
-        'HTTP-Referer': window.location.origin,
-        'X-Title': 'INFORIA Clinical Assistant'
-      },
-      body: formData
-    });
+      const response = await fetch(`${this.baseUrl}/audio/transcriptions`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.apiKey}`,
+          'HTTP-Referer': window.location.origin,
+          'X-Title': 'INFORIA Clinical Assistant'
+          // NO incluir Content-Type para FormData - el browser lo maneja automáticamente
+        },
+        body: formData
+      });
 
-    if (!response.ok) {
-      const errorData = await response.text();
-      throw new Error(`Whisper transcription error: ${response.status} ${response.statusText} - ${errorData}`);
+      if (!response.ok) {
+        const errorData = await response.text();
+        throw new Error(`Whisper transcription error: ${response.status} ${response.statusText} - ${errorData}`);
+      }
+
+      const data: WhisperResponse = await response.json();
+      return data.text;
+    } catch (error) {
+      console.error('Error en transcripción de audio:', error);
+      throw new Error(error instanceof Error ? error.message : 'Error desconocido en transcripción');
     }
-
-    const data: WhisperResponse = await response.json();
-    return data.text;
   }
 
   // Compilador de información para diferentes tipos de informes
@@ -166,49 +169,53 @@ Formato: Dossier profesional completo en markdown
   // Generar informe con IA seleccionada
   async generateReport(
     compiledInfo: string,
-    selectedModel: AIModel = 'openai/gpt-4o-mini'
+    reportType: ReportType = 'nuevo_paciente',
+    selectedModel: string = 'deepseek/deepseek-r1'
   ): Promise<string> {
+    try {
+      const systemPrompts = {
+        'nuevo_paciente': 'Eres un psicólogo clínico experto con 20+ años de experiencia. Generas informes profesionales, precisos y empáticos para primeras consultas.',
+        'seguimiento': 'Eres un psicólogo clínico especializado en seguimiento terapéutico. Evalúas evolución y progresos con criterio profesional.',
+        'alta_paciente': 'Eres un psicólogo clínico con expertise en cierres de tratamiento. Generas dossiers completos de alta con visión integral del proceso.'
+      };
 
-    const systemPrompts = {
-      'openai/gpt-4o-mini': 'Eres un psicólogo clínico experto con 20+ años de experiencia. Generas informes profesionales, precisos y empáticos.',
-      'meta-llama/llama-3.1-8b-instruct': 'Eres un especialista en salud mental. Redactas informes clínicos estructurados siguiendo estándares profesionales.',
-      'anthropic/claude-3-sonnet': 'Eres un profesional de la psicología clínica. Tu enfoque es riguroso, empático y centrado en el bienestar del paciente.',
-      'google/gemini-pro': 'Eres un psicólogo clínico con expertise en documentación profesional. Generas informes completos y clínicamente relevantes.'
-    };
+      const response = await fetch(`${this.baseUrl}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.apiKey}`,
+          'Content-Type': 'application/json',
+          'HTTP-Referer': window.location.origin,
+          'X-Title': 'INFORIA Clinical Assistant'
+        },
+        body: JSON.stringify({
+          model: selectedModel,
+          messages: [
+            {
+              role: 'system',
+              content: systemPrompts[reportType]
+            },
+            {
+              role: 'user',
+              content: compiledInfo
+            }
+          ],
+          max_tokens: 3000,
+          temperature: 0.7,
+          top_p: 0.9
+        })
+      });
 
-    const response = await fetch(`${this.baseUrl}/chat/completions`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${this.apiKey}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': window.location.origin,
-        'X-Title': 'INFORIA Clinical Assistant'
-      },
-      body: JSON.stringify({
-        model: selectedModel,
-        messages: [
-          {
-            role: 'system',
-            content: systemPrompts[selectedModel]
-          },
-          {
-            role: 'user',
-            content: compiledInfo
-          }
-        ],
-        max_tokens: 3000,
-        temperature: 0.7,
-        top_p: 0.9
-      })
-    });
+      if (!response.ok) {
+        const errorData = await response.text();
+        throw new Error(`Report generation error: ${response.status} ${response.statusText} - ${errorData}`);
+      }
 
-    if (!response.ok) {
-      const errorData = await response.text();
-      throw new Error(`Report generation error: ${response.status} ${response.statusText} - ${errorData}`);
+      const data: OpenRouterResponse = await response.json();
+      return data.choices[0]?.message?.content || 'Error al generar el informe';
+    } catch (error) {
+      console.error('Error en generación de informe:', error);
+      throw new Error(error instanceof Error ? error.message : 'Error desconocido en generación de informe');
     }
-
-    const data: OpenRouterResponse = await response.json();
-    return data.choices[0]?.message?.content || 'Error al generar el informe';
   }
 
   // Función principal para proceso completo
@@ -216,16 +223,40 @@ Formato: Dossier profesional completo en markdown
     reportType: ReportType;
     patientData: any;
     sessionData: any;
-    selectedModel: AIModel;
+    selectedModel?: string;
   }): Promise<string> {
-    
-    // 1. Compilar información
-    const compiledInfo = await this.compileReportInfo(data);
-    
-    // 2. Generar informe con IA seleccionada
-    const finalReport = await this.generateReport(compiledInfo, data.selectedModel);
-    
-    return finalReport;
+    try {
+      // 1. Compilar información
+      const compiledInfo = await this.compileReportInfo(data);
+      
+      // 2. Generar informe con IA seleccionada
+      const finalReport = await this.generateReport(
+        compiledInfo, 
+        data.reportType, 
+        data.selectedModel || 'deepseek/deepseek-r1'
+      );
+      
+      return finalReport;
+    } catch (error) {
+      console.error('Error en procesamiento completo:', error);
+      throw new Error(error instanceof Error ? error.message : 'Error en procesamiento del informe');
+    }
+  }
+
+  // Verificar conexión y configuración
+  async testConnection(): Promise<boolean> {
+    try {
+      const response = await fetch(`${this.baseUrl}/models`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${this.apiKey}`,
+          'HTTP-Referer': window.location.origin
+        }
+      });
+      return response.ok;
+    } catch {
+      return false;
+    }
   }
 }
 

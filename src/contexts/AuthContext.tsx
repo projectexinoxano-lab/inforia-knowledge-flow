@@ -1,3 +1,4 @@
+// Ruta: src/contexts/AuthContext.tsx (mejorar distinción loading)
 import { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User, Session } from '@supabase/supabase-js';
@@ -36,9 +37,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true); // Solo para AUTH, no para profile
 
-  // Cargar perfil del usuario
   const loadUserProfile = async (userId: string) => {
     try {
       const { data, error } = await supabase
@@ -53,42 +53,82 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       setProfile(data);
+      console.log('[AUTH] Profile loaded:', !!data);
     } catch (error) {
       console.error('Error loading profile:', error);
     }
   };
 
   useEffect(() => {
-    // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+    let mounted = true;
+
+    const initializeAuth = async () => {
+      try {
+        console.log('[AUTH] Initializing authentication...');
+
+        // 1. Configurar listener de cambios de auth PRIMERO
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(
+          async (event, session) => {
+            console.log('[AUTH] State changed:', event, !!session);
+            
+            if (!mounted) return;
+
+            setSession(session);
+            setUser(session?.user ?? null);
+            
+            // Cargar profile en background, sin bloquear auth
+            if (session?.user) {
+              loadUserProfile(session.user.id); // No await aquí
+            } else {
+              setProfile(null);
+            }
+          }
+        );
+
+        // 2. Obtener sesión inicial
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('[AUTH] Session error:', error);
+        }
+
+        if (!mounted) return;
+
+        console.log('[AUTH] Initial session:', !!session);
+        
+        // 3. Establecer estado AUTH (sin esperar profile)
         setSession(session);
         setUser(session?.user ?? null);
         
-        // Load profile when user signs in
-        if (session?.user) {
-          await loadUserProfile(session.user.id);
-        } else {
-          setProfile(null);
-        }
-        
+        // 4. FINALIZAR loading de AUTH inmediatamente
         setLoading(false);
-      }
-    );
+        
+        // 5. Cargar profile en background
+        if (session?.user) {
+          loadUserProfile(session.user.id);
+        }
 
-    // THEN check for existing session
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        await loadUserProfile(session.user.id);
-      }
-      
-      setLoading(false);
-    });
+        console.log('[AUTH] Auth initialization complete');
 
-    return () => subscription.unsubscribe();
+        // Cleanup
+        return () => {
+          mounted = false;
+          subscription.unsubscribe();
+        };
+
+      } catch (error) {
+        console.error('[AUTH] Initialization error:', error);
+        if (mounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    initializeAuth();
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   const signInWithGoogle = async () => {
@@ -109,7 +149,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       throw error;
     }
   };
-
 
   const signOut = async () => {
     try {
@@ -145,7 +184,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw error;
       }
 
-      // Recargar perfil
       await loadUserProfile(user.id);
       toast.success('Perfil actualizado');
     } catch (error) {
@@ -161,7 +199,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       user,
       profile,
       session,
-      loading,
+      loading, // Solo loading de AUTH, no de profile
       isAuthenticated,
       signInWithGoogle,
       signOut,

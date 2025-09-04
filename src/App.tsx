@@ -1,4 +1,4 @@
-
+// Ruta: src/App.tsx
 import React from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -7,6 +7,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { AuthGuard } from "@/components/auth/AuthGuard";
+
+// Imports con nombres consistentes
 import Dashboard from "./pages/Dashboard";
 import Auth from "./pages/Auth";
 import Onboarding from "./pages/Onboarding";
@@ -15,7 +17,7 @@ import PatientDetailedProfile from "./pages/PatientDetailedProfile";
 import PatientList from "./pages/PatientList";
 import NewPatient from "./pages/NewPatient";
 import MyAccount from "./pages/MyAccount";
-import ReportWorkspace from '@/pages/ReportWorkspace';
+import ReportWorkspace from './pages/ReportWorkspace';
 import FAQs from "./pages/FAQs";
 import NotFound from "./pages/NotFound";
 
