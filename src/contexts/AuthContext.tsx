@@ -1,4 +1,4 @@
-// Ruta: src/contexts/AuthContext.tsx (mejorar distinción loading)
+// Ruta: src/contexts/AuthContext.tsx
 import { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User, Session } from '@supabase/supabase-js';
@@ -11,6 +11,18 @@ interface UserProfile {
   professional_license?: string;
   clinic_name?: string;
   phone?: string;
+  email?: string;
+  physical_address?: string;
+  tax_id?: string;
+  billing_name?: string;
+  billing_email?: string;
+  billing_address?: string;
+  billing_city?: string;
+  billing_postal_code?: string;
+  billing_country?: string;
+  nif_dni?: string;
+  collegiate_number?: string;
+  specialties?: string;
   plan_type: string;
   credits_used: number;
   credits_limit: number;
@@ -37,7 +49,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true); // Solo para AUTH, no para profile
+  const [loading, setLoading] = useState(true);
 
   const loadUserProfile = async (userId: string) => {
     try {
@@ -66,7 +78,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         console.log('[AUTH] Initializing authentication...');
 
-        // 1. Configurar listener de cambios de auth PRIMERO
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
           async (event, session) => {
             console.log('[AUTH] State changed:', event, !!session);
@@ -76,16 +87,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setSession(session);
             setUser(session?.user ?? null);
             
-            // Cargar profile en background, sin bloquear auth
             if (session?.user) {
-              loadUserProfile(session.user.id); // No await aquí
+              loadUserProfile(session.user.id);
             } else {
               setProfile(null);
             }
           }
         );
 
-        // 2. Obtener sesión inicial
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
@@ -96,21 +105,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         console.log('[AUTH] Initial session:', !!session);
         
-        // 3. Establecer estado AUTH (sin esperar profile)
         setSession(session);
         setUser(session?.user ?? null);
-        
-        // 4. FINALIZAR loading de AUTH inmediatamente
         setLoading(false);
         
-        // 5. Cargar profile en background
         if (session?.user) {
           loadUserProfile(session.user.id);
         }
 
         console.log('[AUTH] Auth initialization complete');
 
-        // Cleanup
         return () => {
           mounted = false;
           subscription.unsubscribe();
@@ -199,7 +203,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       user,
       profile,
       session,
-      loading, // Solo loading de AUTH, no de profile
+      loading,
       isAuthenticated,
       signInWithGoogle,
       signOut,

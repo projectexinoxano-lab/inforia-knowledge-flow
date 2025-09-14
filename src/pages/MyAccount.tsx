@@ -1,149 +1,104 @@
-// Ruta: src/pages/MyAccount.tsx (actualizar TabsContent subscription)
-import React, { useState } from "react";
-import { Camera, Download, CreditCard, AlertCircle, CheckCircle, Clock, Star } from "lucide-react";
+// Ruta: src/pages/MyAccount.tsx (CORREGIR ESTRUCTURA)
+import React, { useState, useEffect } from "react";
+import { Save, User, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
+import { Textarea } from "@/components/ui/textarea";
 import { NavigationHeader } from "@/components/NavigationHeader";
 import { CreditsStatus } from '@/components/CreditsStatus';
-import { PricingCards } from '@/components/PricingCards';
-import { BillingSection } from '@/components/BillingSection';
-import { Badge } from "@/components/ui/badge";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { useStripeCheckout } from '@/hooks/useStripeCheckout';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
 const MyAccount = () => {
+  const { profile, updateProfile } = useAuth();
   const [activeTab, setActiveTab] = useState("professional");
-  const { user, profile } = useAuth();
-  const { createCheckoutSession, loading: checkoutLoading } = useStripeCheckout();
+  const [isLoading, setIsLoading] = useState(false);
+  
+  // Estados para formulario con datos reales
+  const [formData, setFormData] = useState({
+    // Datos profesionales Y de facturación en un solo bloque
+    full_name: '',
+    professional_license: '',
+    collegiate_number: '',
+    clinic_name: '',
+    specialties: '',
+    phone: '',
+    email: '',
+    physical_address: '',
+    billing_name: '',
+    billing_email: '',
+    tax_id: '',
+    nif_dni: '',
+    billing_address: '',
+    billing_city: '',
+    billing_postal_code: '',
+    billing_country: ''
+  });
 
-  // Mock data - en producción vendría de la base de datos
-  const mockUser = {
-    name: "Dr. María González",
-    collegiateNumber: "28-4567-89",
-    clinicName: "Centro de Psicología Integral",
-    email: "maria.gonzalez@email.com",
-    currentPlan: "professional" as const,
-    planName: "Plan Profesional",
-    reportsUsed: 34,
-    reportsTotal: 100,
-    nextBillingDate: "15 de enero de 2025",
-    subscriptionStatus: "active" as const,
-    subscriptionId: "sub_1234567890",
-    customerId: "cus_1234567890"
-  };
-
-  const mockInvoices = [
-    { 
-      id: "inv_001", 
-      number: "INV-2024-001", 
-      date: "2024-12-01", 
-      amount: 99, 
-      status: "paid" as const, 
-      plan: "Plan Profesional",
-      downloadUrl: "/api/invoices/inv_001.pdf"
-    },
-    { 
-      id: "inv_002", 
-      number: "INV-2024-002", 
-      date: "2024-11-01", 
-      amount: 99, 
-      status: "paid" as const, 
-      plan: "Plan Profesional",
-      downloadUrl: "/api/invoices/inv_002.pdf"
-    },
-    { 
-      id: "inv_003", 
-      number: "INV-2024-003", 
-      date: "2024-10-01", 
-      amount: 99, 
-      status: "paid" as const, 
-      plan: "Plan Profesional",
-      downloadUrl: "/api/invoices/inv_003.pdf"
-    }
-  ];
-
-  const usagePercentage = (mockUser.reportsUsed / mockUser.reportsTotal) * 100;
-  const canRenewEarly = usagePercentage >= 80;
-
-  // Manejar selección de plan
-  const handlePlanSelect = async (planId: 'professional' | 'clinic') => {
-    if (!user?.id) {
-      toast.error('Debes estar autenticado para cambiar de plan');
-      return;
-    }
-
-    if (planId === mockUser.currentPlan) {
-      toast.info('Ya tienes este plan activo');
-      return;
-    }
-
-    try {
-      const session = await createCheckoutSession(planId, user.id, user.email);
-      
-      // Redirigir a Stripe Checkout
-      if (session.url) {
-        window.location.href = session.url;
-      } else {
-        throw new Error('No se pudo generar la URL de checkout');
-      }
-    } catch (error) {
-      console.error('Error creating checkout session:', error);
-      toast.error('Error al procesar el pago. Inténtalo de nuevo.');
-    }
-  };
-
-  // Manejar renovación anticipada
-  const handleEarlyRenewal = async () => {
-    try {
-      const session = await createCheckoutSession(mockUser.currentPlan, user!.id, user!.email);
-      
-      if (session.url) {
-        window.location.href = session.url;
-      } else {
-        throw new Error('No se pudo generar la URL de renovación');
-      }
-    } catch (error) {
-      console.error('Error en renovación anticipada:', error);
-      toast.error('Error al procesar la renovación. Inténtalo de nuevo.');
-    }
-  };
-
-  // Manejar descarga de factura
-  const handleDownloadInvoice = async (invoiceId: string) => {
-    try {
-      toast.info('Descargando factura...');
-      
-      const response = await fetch(`/api/stripe/download-invoice/${invoiceId}`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${user?.id}`,
-        },
+  // Actualizar formData cuando cambie el profile
+  useEffect(() => {
+    if (profile) {
+      setFormData({
+        full_name: profile.full_name || '',
+        professional_license: profile.professional_license || '',
+        collegiate_number: profile.collegiate_number || '',
+        clinic_name: profile.clinic_name || '',
+        specialties: profile.specialties || '',
+        phone: profile.phone || '',
+        email: profile.email || '',
+        physical_address: profile.physical_address || '',
+        billing_name: profile.billing_name || '',
+        billing_email: profile.billing_email || '',
+        tax_id: profile.tax_id || '',
+        nif_dni: profile.nif_dni || '',
+        billing_address: profile.billing_address || '',
+        billing_city: profile.billing_city || '',
+        billing_postal_code: profile.billing_postal_code || '',
+        billing_country: profile.billing_country || 'España'
       });
+    }
+  }, [profile]);
 
-      if (!response.ok) {
-        throw new Error('Error al descargar la factura');
+  const handleInputChange = (field: string) => (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: e.target.value
+    }));
+  };
+
+  const handleSaveChanges = async () => {
+    // Validar campos obligatorios
+    const requiredFields = {
+      full_name: 'Nombre Completo',
+      professional_license: 'Nº Colegiado',
+      email: 'Email',
+      physical_address: 'Dirección Física',
+      billing_name: 'Nombre de Facturación',
+      billing_email: 'Email de Facturación',
+      tax_id: 'NIF/DNI'
+    };
+
+    for (const [field, label] of Object.entries(requiredFields)) {
+      if (!formData[field as keyof typeof formData]?.trim()) {
+        toast.error(`${label} es obligatorio`);
+        return;
       }
+    }
 
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `factura-${invoiceId}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-      
-      toast.success('Factura descargada correctamente');
+    setIsLoading(true);
+    try {
+      await updateProfile(formData);
+      toast.success('Datos actualizados correctamente');
     } catch (error) {
-      console.error('Error descargando factura:', error);
-      toast.error('Error al descargar la factura');
+      console.error('Error updating profile:', error);
+      toast.error('Error al actualizar los datos');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -154,9 +109,9 @@ const MyAccount = () => {
       <div className="container mx-auto px-6 py-8">
         {/* Título */}
         <div className="mb-8">
-          <h1 className="text-3xl font-lora font-bold text-[#2E403B]">Mi Cuenta</h1>
-          <p className="text-[#333333]/70 font-nunito-sans mt-2">
-            Gestiona tu perfil, suscripción y configuración
+          <h1 className="text-3xl font-serif font-bold text-[#2E403B]">Mi Cuenta</h1>
+          <p className="text-[#333333]/70 font-sans mt-2">
+            Gestiona tu perfil profesional y datos de facturación
           </p>
         </div>
 
@@ -167,225 +122,248 @@ const MyAccount = () => {
           </div>
           
           <div className="lg:col-span-2">
-            {/* Información rápida de suscripción */}
-            <Card className="h-full">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="font-serif text-xl text-[#2E403B]">
-                      {mockUser.planName}
-                    </CardTitle>
-                    <CardDescription className="font-nunito-sans">
-                      Próxima facturación: {mockUser.nextBillingDate}
+            {/* Sistema de tabs */}
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="grid w-full grid-cols-2 mb-8">
+                <TabsTrigger value="professional" className="font-sans">
+                  Mis Datos Profesionales
+                </TabsTrigger>
+                <TabsTrigger value="subscription" className="font-sans">
+                  Suscripción y Facturación
+                </TabsTrigger>
+              </TabsList>
+
+              {/* Tab: Datos Profesionales (TODO EN UNO) */}
+              <TabsContent value="professional">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="font-serif">Mis Datos Profesionales</CardTitle>
+                    <CardDescription className="font-sans">
+                      Gestiona tu información profesional y de contacto
                     </CardDescription>
-                  </div>
-                  <Badge 
-                    variant="secondary" 
-                    className="bg-green-100 text-green-800 font-nunito-sans"
-                  >
-                    <CheckCircle className="w-3 h-3 mr-1" />
-                    Activa
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="font-nunito-sans text-[#333333]/70">
-                    Informes utilizados
-                  </span>
-                  <span className="font-nunito-sans font-medium">
-                    {mockUser.reportsUsed} / {mockUser.reportsTotal}
-                  </span>
-                </div>
-                <Progress value={usagePercentage} className="mt-2 h-2" />
-                
-                {canRenewEarly && (
-                  <Alert className="mt-4 border-amber-200 bg-amber-50">
-                    <AlertCircle className="h-4 w-4 text-amber-600" />
-                    <AlertDescription className="font-nunito-sans text-amber-800">
-                      Has usado el 80% de tus informes. 
-                      <Button 
-                        variant="link" 
-                        className="h-auto p-0 ml-1 text-amber-800 font-medium"
-                        onClick={handleEarlyRenewal}
-                        disabled={checkoutLoading}
-                      >
-                        {checkoutLoading ? 'Procesando...' : 'Renovar ahora'}
-                      </Button>
-                    </AlertDescription>
-                  </Alert>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-
-        {/* Sistema de tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-8">
-            <TabsTrigger value="professional" className="font-nunito-sans">
-              Mis Datos Profesionales
-            </TabsTrigger>
-            <TabsTrigger value="security" className="font-nunito-sans">
-              Cuenta y Seguridad
-            </TabsTrigger>
-            <TabsTrigger value="subscription" className="font-nunito-sans">
-              Suscripción y Facturación
-            </TabsTrigger>
-          </TabsList>
-
-          {/* Tab 1: Mis Datos Profesionales */}
-          <TabsContent value="professional">
-            {/* Mantener contenido existente */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="font-serif text-[#2E403B]">Mis Datos Profesionales</CardTitle>
-                <CardDescription className="font-nunito-sans">
-                  Gestiona tu información profesional y de contacto
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {/* Contenido existente del perfil profesional */}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Tab 2: Cuenta y Seguridad */}
-          <TabsContent value="security">
-            {/* Mantener contenido existente */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="font-serif text-[#2E403B]">Seguridad de la Cuenta</CardTitle>
-                <CardDescription className="font-nunito-sans">
-                  Gestiona la seguridad de tu cuenta
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {/* Contenido existente de seguridad */}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Tab 3: Suscripción y Facturación - ACTUALIZADO */}
-          <TabsContent value="subscription">
-            <div className="space-y-8">
-              {/* Estado actual de la suscripción */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="font-serif text-[#2E403B] flex items-center gap-2">
-                    <CreditCard className="h-5 w-5" />
-                    Mi Suscripción Actual
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid md:grid-cols-3 gap-6">
-                    <div>
-                      <Label className="font-nunito-sans text-sm text-[#333333]/70">Plan</Label>
-                      <p className="font-serif text-lg font-medium text-[#2E403B]">
-                        {mockUser.planName}
-                      </p>
-                    </div>
-                    <div>
-                      <Label className="font-nunito-sans text-sm text-[#333333]/70">
-                        Próxima Facturación
-                      </Label>
-                      <p className="font-nunito-sans text-lg font-medium text-[#333333]">
-                        {mockUser.nextBillingDate}
-                      </p>
-                    </div>
-                    <div>
-                      <Label className="font-nunito-sans text-sm text-[#333333]/70">Estado</Label>
-                      <Badge className="bg-green-100 text-green-800 font-nunito-sans">
-                        <CheckCircle className="w-3 h-3 mr-1" />
-                        Suscripción Activa
-                      </Badge>
-                    </div>
-                  </div>
-
-                  <div className="mt-6 p-4 bg-[#2E403B]/5 rounded-lg border border-[#2E403B]/10">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="font-nunito-sans text-[#333333]/70">Informes utilizados este mes</span>
-                      <span className="font-nunito-sans font-medium text-[#2E403B]">
-                        {mockUser.reportsUsed} / {mockUser.reportsTotal}
-                      </span>
-                    </div>
-                    <Progress value={usagePercentage} className="h-3" />
-                    
-                    {canRenewEarly && (
-                      <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-md">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <AlertCircle className="h-4 w-4 text-amber-600" />
-                            <span className="font-nunito-sans text-sm text-amber-800">
-                              Pocos informes disponibles
-                            </span>
-                          </div>
-                          <Button 
-                            size="sm"
-                            onClick={handleEarlyRenewal}
-                            disabled={checkoutLoading}
-                            className="bg-[#2E403B] hover:bg-[#2E403B]/90 font-nunito-sans"
-                          >
-                            {checkoutLoading ? (
-                              <>
-                                <Clock className="w-4 h-4 mr-2 animate-spin" />
-                                Procesando...
-                              </>
-                            ) : (
-                              'Renovar Plan'
-                            )}
-                          </Button>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    {/* Formulario unificado */}
+                    <div className="grid gap-6">
+                      {/* Datos básicos profesionales */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="full_name" className="font-sans text-sm font-medium">
+                            Nombre Completo *
+                          </Label>
+                          <Input
+                            id="full_name"
+                            value={formData.full_name}
+                            onChange={handleInputChange('full_name')}
+                            className="font-sans"
+                            placeholder="Dr. María González"
+                          />
+                        </div>
+                        
+                        <div>
+                          <Label htmlFor="professional_license" className="font-sans text-sm font-medium">
+                            Nº de Colegiado *
+                          </Label>
+                          <Input
+                            id="professional_license"
+                            value={formData.professional_license}
+                            onChange={handleInputChange('professional_license')}
+                            className="font-sans"
+                            placeholder="28-4567-89"
+                          />
                         </div>
                       </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
 
-              {/* Tarjetas de planes disponibles */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="font-serif text-[#2E403B]">Cambiar de Plan</CardTitle>
-                  <CardDescription className="font-nunito-sans">
-                    Selecciona el plan que mejor se adapte a tus necesidades
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <PricingCards
-                    currentPlan={mockUser.currentPlan}
-                    onPlanSelect={handlePlanSelect}
-                    showCurrentPlan={true}
-                  />
-                  
-                  <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                    <div className="flex items-start gap-3">
-                      <Star className="h-5 w-5 text-blue-600 mt-0.5" />
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="clinic_name" className="font-sans text-sm font-medium">
+                            Nombre de la Consulta
+                          </Label>
+                          <Input
+                            id="clinic_name"
+                            value={formData.clinic_name}
+                            onChange={handleInputChange('clinic_name')}
+                            className="font-sans"
+                            placeholder="Centro de Psicología Integral"
+                          />
+                        </div>
+
+                        <div>
+                          <Label htmlFor="specialties" className="font-sans text-sm font-medium">
+                            Especialidades
+                          </Label>
+                          <Input
+                            id="specialties"
+                            value={formData.specialties}
+                            onChange={handleInputChange('specialties')}
+                            className="font-sans"
+                            placeholder="Psicología Clínica, Terapia Cognitiva"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="email" className="font-sans text-sm font-medium">
+                            Email *
+                          </Label>
+                          <Input
+                            id="email"
+                            type="email"
+                            value={formData.email}
+                            onChange={handleInputChange('email')}
+                            className="font-sans"
+                            placeholder="maria.gonzalez@email.com"
+                          />
+                        </div>
+
+                        <div>
+                          <Label htmlFor="phone" className="font-sans text-sm font-medium">
+                            Teléfono
+                          </Label>
+                          <Input
+                            id="phone"
+                            value={formData.phone}
+                            onChange={handleInputChange('phone')}
+                            className="font-sans"
+                            placeholder="+34 600 000 000"
+                          />
+                        </div>
+                      </div>
+
                       <div>
-                        <h4 className="font-serif font-medium text-blue-900 mb-1">
-                          Cambio de plan instantáneo
-                        </h4>
-                        <p className="font-nunito-sans text-sm text-blue-800">
-                          Al cambiar de plan, se ajustará el precio de forma proporcional y 
-                          tu cuota de informes se actualizará inmediatamente.
-                        </p>
+                        <Label htmlFor="physical_address" className="font-sans text-sm font-medium">
+                          Dirección Física *
+                        </Label>
+                        <Textarea
+                          id="physical_address"
+                          value={formData.physical_address}
+                          onChange={handleInputChange('physical_address')}
+                          className="font-sans resize-none"
+                          rows={3}
+                          placeholder="Calle Ejemplo 123, 1º A&#10;28001 Madrid&#10;España"
+                        />
+                      </div>
+
+                      {/* Datos de facturación integrados */}
+                      <div className="border-t pt-6">
+                        <h3 className="font-serif text-lg font-medium text-[#2E403B] mb-4">
+                          Datos de Facturación
+                        </h3>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                          <div>
+                            <Label htmlFor="billing_name" className="font-sans text-sm font-medium">
+                              Nombre para Facturación *
+                            </Label>
+                            <Input
+                              id="billing_name"
+                              value={formData.billing_name}
+                              onChange={handleInputChange('billing_name')}
+                              className="font-sans"
+                              placeholder="María González Pérez"
+                            />
+                          </div>
+
+                          <div>
+                            <Label htmlFor="billing_email" className="font-sans text-sm font-medium">
+                              Email de Facturación *
+                            </Label>
+                            <Input
+                              id="billing_email"
+                              type="email"
+                              value={formData.billing_email}
+                              onChange={handleInputChange('billing_email')}
+                              className="font-sans"
+                              placeholder="facturacion@email.com"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                          <div>
+                            <Label htmlFor="tax_id" className="font-sans text-sm font-medium">
+                              NIF/DNI *
+                            </Label>
+                            <Input
+                              id="tax_id"
+                              value={formData.tax_id}
+                              onChange={handleInputChange('tax_id')}
+                              className="font-sans"
+                              placeholder="12345678Z"
+                            />
+                          </div>
+
+                          <div>
+                            <Label htmlFor="billing_country" className="font-sans text-sm font-medium">
+                              País
+                            </Label>
+                            <Input
+                              id="billing_country"
+                              value={formData.billing_country}
+                              onChange={handleInputChange('billing_country')}
+                              className="font-sans"
+                              placeholder="España"
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <Label htmlFor="billing_address" className="font-sans text-sm font-medium">
+                            Dirección de Facturación
+                          </Label>
+                          <Textarea
+                            id="billing_address"
+                            value={formData.billing_address}
+                            onChange={handleInputChange('billing_address')}
+                            className="font-sans resize-none"
+                            rows={2}
+                            placeholder="Si es diferente a la dirección física"
+                          />
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
 
-              {/* Historial de facturas */}
-              <BillingSection
-                currentPlan={mockUser.currentPlan}
-                nextBillingDate={mockUser.nextBillingDate}
-                invoices={mockInvoices}
-                onDownloadInvoice={handleDownloadInvoice}
-                onEarlyRenewal={handleEarlyRenewal}
-                canRenewEarly={canRenewEarly}
-              />
-            </div>
-          </TabsContent>
-        </Tabs>
+                    <Button 
+                      onClick={handleSaveChanges}
+                      disabled={isLoading}
+                      className="w-full font-sans bg-[#2E403B] hover:bg-[#2E403B]/90"
+                    >
+                      {isLoading ? (
+                        <>
+                          <Save className="mr-2 h-4 w-4 animate-spin" />
+                          Guardando...
+                        </>
+                      ) : (
+                        <>
+                          <Save className="mr-2 h-4 w-4" />
+                          Guardar Cambios
+                        </>
+                      )}
+                    </Button>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* Tab: Suscripción y Facturación */}
+              <TabsContent value="subscription">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="font-serif">Suscripción y Facturación</CardTitle>
+                    <CardDescription className="font-sans">
+                      Gestiona tu plan y descarga facturas
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-center py-8 text-muted-foreground">
+                      <p>Funcionalidad de suscripción en desarrollo</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
+          </div>
+        </div>
       </div>
     </div>
   );
