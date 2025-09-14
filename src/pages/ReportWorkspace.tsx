@@ -98,7 +98,7 @@ export default function ReportWorkspace() {
                     <Button 
                       variant="link" 
                       className="p-0 h-auto text-primary underline"
-                      onClick={() => navigate('/patients/new')}
+                      onClick={() => navigate('/new-patient')}
                     >
                       Crear tu primer paciente
                     </Button>

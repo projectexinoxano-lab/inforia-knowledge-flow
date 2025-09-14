@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       patients: {
         Row: {
+          persona_rescate_nombre: string
           birth_date: string | null
           created_at: string | null
           email: string | null

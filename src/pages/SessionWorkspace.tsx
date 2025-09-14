@@ -1,15 +1,13 @@
-
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Play, Square, Trash2, Save, Wand2, FileText, AlertTriangle } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Play, Square, Trash2, Save, Wand2, FileText, AlertTriangle, Calendar, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 import DashboardHeader from '@/components/DashboardHeader';
 import FileUploadZone from '@/components/FileUploadZone';
-import ReportsViewer from '@/components/ReportsViewer';
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { useAudioRecording } from '@/hooks/useAudioRecording';
 import { useAuth } from '@/contexts/AuthContext';
@@ -21,18 +19,21 @@ import type { Patient } from '@/services/database';
 
 export default function SessionWorkspace() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
-  const [patients, setPatients] = useState<Patient[]>([]);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [notes, setNotes] = useState("");
   const [reportType, setReportType] = useState<'primera_visita' | 'seguimiento'>('primera_visita');
   const [isGenerating, setIsGenerating] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [transcription, setTranscription] = useState<string>("");
-  const [showReports, setShowReports] = useState(false);
   const [generatedReportId, setGeneratedReportId] = useState<string | null>(null);
   const [aiStatus, setAiStatus] = useState<'working' | 'fallback' | 'unknown'>('unknown');
   const [driveStatus, setDriveStatus] = useState<'working' | 'no-permissions' | 'unknown'>('unknown');
+  const [patientReports, setPatientReports] = useState<any[]>([]);
+
+  // Obtener patientId desde URL
+  const patientId = searchParams.get('patientId');
 
   const patientInitials = selectedPatient ? 
     selectedPatient.name.split(' ').map(n => n[0]).join('').toUpperCase() : 
@@ -55,21 +56,27 @@ export default function SessionWorkspace() {
     playRecording
   } = useAudioRecording(patientInitials);
 
+  // Cargar paciente desde URL
   useEffect(() => {
-    const loadPatients = async () => {
-      if (!user?.id) return;
+    const loadPatient = async () => {
+      if (!user?.id || !patientId) return;
       
       try {
-        const patientsData = await patientsService.getAll();
-        setPatients(patientsData);
+        const patient = await patientsService.getById(patientId);
+        if (patient) {
+          setSelectedPatient(patient);
+          // Cargar informes del paciente
+          const reports = await reportsService.getByPatient(patientId);
+          setPatientReports(reports);
+        }
       } catch (error) {
-        console.error('Error loading patients:', error);
-        toast.error('Error al cargar pacientes');
+        console.error('Error loading patient:', error);
+        toast.error('Error al cargar datos del paciente');
       }
     };
 
-    loadPatients();
-  }, [user?.id]);
+    loadPatient();
+  }, [user?.id, patientId]);
 
   useEffect(() => {
     const handleAutoTranscription = async () => {
@@ -222,7 +229,7 @@ ${selectedFiles.map((file, index) => `${index + 1}. ${file.name} (${Math.round(f
 
   const handleGenerateReport = async () => {
     if (!selectedPatient || (!notes.trim() && !transcription.trim() && selectedFiles.length === 0)) {
-      toast.error('Por favor selecciona un paciente y proporciona contenido para el informe');
+      toast.error('Por favor proporciona contenido para el informe');
       return;
     }
 
@@ -386,6 +393,10 @@ ${selectedFiles.map((file, index) => `${index + 1}. ${file.name} (${Math.round(f
         }
       }
 
+      // Recargar informes del paciente
+      const updatedReports = await reportsService.getByPatient(selectedPatient.id);
+      setPatientReports(updatedReports);
+      
       setGeneratedReportId(newReport.id);
       
       let successMessage = '';
@@ -405,7 +416,6 @@ ${selectedFiles.map((file, index) => `${index + 1}. ${file.name} (${Math.round(f
       setTranscription('');
       clearFiles();
       deleteRecording();
-      setShowReports(true);
       
     } catch (error) {
       console.error('Error generating report:', error);
@@ -441,13 +451,6 @@ ${selectedFiles.map((file, index) => `${index + 1}. ${file.name} (${Math.round(f
         }
         if (draftData.transcription) {
           setTranscription(draftData.transcription);
-        }
-        if (draftData.patient_id) {
-          const patient = patients.find(p => p.id === draftData.patient_id);
-          if (patient) {
-            setSelectedPatient(patient);
-            setShowReports(true);
-          }
         }
         toast.success('Borrador cargado');
       } else {
@@ -489,12 +492,39 @@ ${selectedFiles.map((file, index) => `${index + 1}. ${file.name} (${Math.round(f
     return 'Estado del sistema: Verificando...';
   };
 
+  const formatDate = (dateString: string) => {
+    if (!dateString) return 'No especificada';
+    return new Date(dateString).toLocaleDateString('es-ES');
+  };
+
+  if (!selectedPatient) {
+    return (
+      <>
+        <DashboardHeader />
+        <div className="container mx-auto max-w-6xl px-6 py-8">
+          <div className="text-center py-12">
+            <FileText className="w-12 h-12 mx-auto mb-4 opacity-50" />
+            <h3 className="text-lg font-semibold mb-2">Paciente no encontrado</h3>
+            <p className="text-muted-foreground mb-6">
+              El paciente especificado no existe o no tienes acceso a él.
+            </p>
+            <Button onClick={() => navigate('/patient-list')}>
+              Volver a lista de pacientes
+            </Button>
+          </div>
+        </div>
+      </>
+    );
+  }
+
   return (
     <>
       <DashboardHeader />
       <div className="container mx-auto max-w-6xl px-6 py-8 space-y-8">
         <div className="text-center">
-          <h1 className="font-lora text-3xl font-bold mb-2">Registro de Sesión Clínica</h1>
+          <h1 className="font-lora text-3xl font-bold mb-2">
+            Registro de Sesión - {selectedPatient.name}
+          </h1>
           <p className="text-muted-foreground">
             Sistema híbrido de documentación clínica con IA y fallbacks robustos
           </p>
@@ -505,49 +535,12 @@ ${selectedFiles.map((file, index) => `${index + 1}. ${file.name} (${Math.round(f
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <div className="space-y-6">
+            {/* GRABACIÓN Y NOTAS */}
             <Card>
               <CardHeader>
-                <CardTitle>Información de la Sesión</CardTitle>
+                <CardTitle>Registro de la Sesión</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Paciente</label>
-                    <Select 
-                      value={selectedPatient?.id || ""} 
-                      onValueChange={(value) => {
-                        const patient = patients.find(p => p.id === value);
-                        setSelectedPatient(patient || null);
-                        setShowReports(!!patient);
-                      }}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Seleccionar paciente" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {patients.map((patient) => (
-                          <SelectItem key={patient.id} value={patient.id}>
-                            {patient.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Tipo de Informe</label>
-                    <Select value={reportType} onValueChange={(value: 'primera_visita' | 'seguimiento') => setReportType(value)}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="primera_visita">Primera Visita</SelectItem>
-                        <SelectItem value="seguimiento">Seguimiento</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
                 <div className="space-y-4">
                   <h3 className="font-semibold">Grabación de Sesión</h3>
                   
@@ -694,7 +687,7 @@ ${selectedFiles.map((file, index) => `${index + 1}. ${file.name} (${Math.round(f
               <Button 
                 size="lg" 
                 onClick={handleGenerateReport}
-                disabled={isGenerating || isTranscribing || !selectedPatient}
+                disabled={isGenerating || isTranscribing}
                 className="bg-primary hover:bg-primary/90 flex items-center gap-2"
               >
                 <Wand2 className="w-4 h-4" />
@@ -726,47 +719,67 @@ ${selectedFiles.map((file, index) => `${index + 1}. ${file.name} (${Math.round(f
             )}
           </div>
 
-          <div className="space-y-6">
-            {showReports && selectedPatient && (
-              <ReportsViewer 
-                patientId={selectedPatient.id}
-                patientName={selectedPatient.name}
-                className="h-full"
-              />
-            )}
-
-            {!selectedPatient && (
-              <Card>
-                <CardContent className="p-6">
-                  <div className="text-center text-muted-foreground">
-                    <FileText className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                    <p>Selecciona un paciente para ver sus informes</p>
-                    <p className="text-sm mt-2">
-                      El sistema genera informes automáticamente con IA o estructurados según disponibilidad
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+          {/* INFORMES DEL PACIENTE CON SCROLL - COPIA DE PatientDetailedProfile */}
+          <div className="space-y-8">
+            <Card>
+              <CardHeader>
+                <CardTitle className="font-serif text-lg flex items-center">
+                  <FileText className="mr-2 h-5 w-5" />
+                  Actividad - Informes
+                </CardTitle>
+              </CardHeader>
+              
+              <CardContent className="space-y-4">
+                {/* CONTENEDOR CON SCROLL - ALTURA FIJA EQUIVALENTE A 3 INFORMES */}
+                <div className="h-60 overflow-y-auto custom-scrollbar space-y-4 pr-2">
+                  {patientReports.length > 0 ? (
+                    patientReports.map((report) => (
+                      <div key={report.id} className="border rounded-lg p-4 hover:bg-muted/30 transition-colors">
+                        <div className="flex items-start justify-between mb-2">
+                          <div className="flex-1">
+                            <h4 className="font-medium text-foreground text-sm leading-tight">
+                              {report.title}
+                            </h4>
+                            <div className="flex items-center space-x-2 mt-2 text-xs text-muted-foreground">
+                              <Calendar className="h-3 w-3" />
+                              <span>{formatDate(report.created_at)}</span>
+                              <span>•</span>
+                              <Badge variant="outline" className="text-xs">
+                                {report.report_type === 'primera_visita' ? 'Primera Visita' : 'Seguimiento'}
+                              </Badge>
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center space-x-2">
+                            <Badge variant={report.status === 'completed' ? 'default' : 'secondary'} className="text-xs">
+                              {report.status === 'completed' ? 'Completado' : 'Borrador'}
+                            </Badge>
+                            {report.google_drive_file_id && (
+                              <a
+                                href={`https://docs.google.com/document/d/${report.google_drive_file_id}/edit`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-primary hover:text-primary/80 transition-colors"
+                                title="Abrir informe en Google Drive"
+                              >
+                                <ExternalLink className="h-4 w-4" />
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-8">
+                      <FileText className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+                      <p className="text-sm text-muted-foreground">Sin informes registrados</p>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
-
-        {process.env.NODE_ENV === 'development' && (
-          <Card className="border-blue-200">
-            <CardHeader>
-              <CardTitle className="text-sm">Debug Info - Sistema Híbrido con Test Conectividad</CardTitle>
-            </CardHeader>
-            <CardContent className="text-xs space-y-1">
-              <p>Paciente: {selectedPatient?.name || 'Ninguno'}</p>
-              <p>Audio: {audioBlob ? 'Grabado' : 'No'} | Transcripción: {transcription ? `${transcription.length} chars` : 'No'}</p>
-              <p>Notas: {notes.length} chars | Archivos: {selectedFiles.length}</p>
-              <p>Estado IA: {aiStatus} | Estado Drive: {driveStatus}</p>
-              <p>Sistema: {isRecording ? 'Grabando' : isTranscribing ? 'Transcribiendo' : isGenerating ? 'Generando' : 'Listo'}</p>
-              <p>Contenido total: {getTotalContent()}</p>
-              <p>API Key OpenRouter: {import.meta.env.VITE_OPENROUTER_API_KEY ? 'Configurada' : 'Faltante'}</p>
-            </CardContent>
-          </Card>
-        )}
       </div>
     </>
   );

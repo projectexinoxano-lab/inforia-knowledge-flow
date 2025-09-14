@@ -1,12 +1,13 @@
+// Ruta: src/services/credits.ts (actualizado con callback de refresh)
 import { supabase } from '@/integrations/supabase/client';
 
 export interface UserProfile {
   id: string;
   full_name?: string;
-  plan_type: string; // 'professional' | 'clinic' - but keeping as string for DB compatibility
+  plan_type: string;
   credits_used: number;
   credits_limit: number;
-  subscription_status: string; // 'active' | 'warning' | 'over_quota' | 'suspended' - but keeping as string for DB compatibility
+  subscription_status: string;
 }
 
 export const creditsService = {
@@ -28,29 +29,35 @@ export const creditsService = {
     return data;
   },
 
-  async consumeCredit(): Promise<boolean> {
+  async consumeCredit(onSuccess?: () => void): Promise<boolean> {
     const profile = await this.getUserProfile();
     if (!profile) return false;
 
     const newCreditsUsed = profile.credits_used + 1;
     
-    // Verificar límite
+    // CRÍTICO: Verificar límite antes de permitir generación
     if (newCreditsUsed > profile.credits_limit) {
-      throw new Error('Límite de créditos excedido');
+      throw new Error('Límite de créditos excedido. Actualiza tu plan para continuar.');
     }
 
-    // Actualizar créditos
+    // Actualizar contador (MONETIZACIÓN CRÍTICA)
     const { error } = await supabase
       .from('profiles')
       .update({ 
         credits_used: newCreditsUsed,
-        subscription_status: this.calculateStatus(newCreditsUsed, profile.credits_limit)
+        subscription_status: this.calculateStatus(newCreditsUsed, profile.credits_limit),
+        updated_at: new Date().toISOString()
       })
       .eq('id', profile.id);
 
     if (error) {
       console.error('Error updating credits:', error);
       return false;
+    }
+
+    // Ejecutar callback para refrescar UI
+    if (onSuccess) {
+      onSuccess();
     }
 
     return true;
@@ -74,7 +81,7 @@ export const creditsService = {
     if (profile.credits_used >= profile.credits_limit) {
       return { 
         canGenerate: false, 
-        message: 'Has alcanzado tu límite de informes. Actualiza tu plan para continuar.' 
+        message: 'Has alcanzado tu límite de informes mensuales. Actualiza tu plan para continuar.' 
       };
     }
 

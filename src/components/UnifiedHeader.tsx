@@ -1,3 +1,4 @@
+
 import { Search, Menu, UserCircle, Calendar, Users, Plus, HelpCircle, LogOut, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,7 +18,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 
-const DashboardHeader = () => {
+const UnifiedHeader = () => {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const { toast } = useToast();
@@ -170,4 +171,4 @@ const DashboardHeader = () => {
   );
 };
 
-export default DashboardHeader;
+export default UnifiedHeader;
