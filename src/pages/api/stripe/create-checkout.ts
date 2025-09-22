@@ -1,34 +1,44 @@
-// Ruta: src/pages/api/stripe/create-checkout.ts (reemplazar contenido completo)
-import type { NextApiRequest, NextApiResponse } from 'next';
-import Stripe from 'stripe';
+import { Request, Response } from 'express';
+// Importación corregida para servidor en raíz
+import { getStripeClient } from '../../../lib/stripe-clients.js';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-08-27.basil',
-});
+const stripePriceIds: Record<string, string | undefined> = {
+  professional: process.env.VITE_STRIPE_PROFESSIONAL_PRICE_ID,
+  enterprise: process.env.VITE_STRIPE_ENTERPRISE_PRICE_ID,
+};
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
+export async function createCheckoutSession(req: Request, res: Response): Promise<void> {
+  console.log('[CHECKOUT] Iniciando creación de sesión');
+  console.log('[CHECKOUT] Body recibido:', req.body);
+  
   try {
-    const { planId, userId, email } = req.body;
-
-    if (!planId || !userId) {
-      return res.status(400).json({ error: 'Faltan datos requeridos' });
+    const { planId } = req.body;
+    
+    if (!planId || typeof planId !== 'string') {
+      res.status(400).json({ 
+        error: 'planId es requerido y debe ser string',
+        received: planId 
+      });
+      return;
     }
-
-    const priceId = planId === 'professional' 
-      ? process.env.STRIPE_PROFESSIONAL_PRICE_ID 
-      : process.env.STRIPE_CLINIC_PRICE_ID;
-
+    
+    // Obtener priceId dinámicamente para asegurar que las variables estén cargadas
+    const priceId = process.env[`VITE_STRIPE_${planId.toUpperCase()}_PRICE_ID`];
+    
     if (!priceId) {
-      return res.status(500).json({ error: 'Price ID no configurado' });
+      console.error('[CHECKOUT] Price IDs disponibles:', Object.keys(process.env).filter(k => k.includes('PRICE_ID')));
+      res.status(400).json({ 
+        error: `Plan "${planId}" no válido o price_id no configurado`,
+        availablePlans: Object.keys(stripePriceIds).filter(k => stripePriceIds[k])
+      });
+      return;
     }
-
+    
+    console.log('[CHECKOUT] Usando price_id:', priceId);
+    
+    // Inicializar Stripe usando el factory (lazy initialization)
+    const stripe = getStripeClient();
+    
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: [
@@ -38,24 +48,31 @@ export default async function handler(
         },
       ],
       mode: 'subscription',
-      success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/account?success=true`,
-      cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/account`,
-      customer_email: email,
+      success_url: `${process.env.VITE_BASE_URL || 'http://localhost:5173'}/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${process.env.VITE_BASE_URL || 'http://localhost:5173'}/pricing`,
+      // NO incluimos customer_email para que Stripe lo solicite
       metadata: {
-        userId,
-        planId,
-      },
+        planId: planId,
+      }
     });
-
-    return res.status(200).json({
-      url: session.url,
+    
+    console.log('[CHECKOUT] Sesión creada:', session.id);
+    
+    res.status(200).json({
       sessionId: session.id,
+      url: session.url,
     });
-
-  } catch (error: any) {
-    console.error('Error creando checkout:', error);
-    return res.status(500).json({ 
-      error: error.message || 'Error interno del servidor' 
+    
+  } catch (error) {
+    console.error('[CHECKOUT] Error completo:', error);
+    
+    const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+    const statusCode = errorMessage.includes('STRIPE_SECRET_KEY') ? 500 : 400;
+    
+    res.status(statusCode).json({
+      error: 'Error al crear sesión de checkout',
+      details: errorMessage,
+      timestamp: new Date().toISOString(),
     });
   }
 }

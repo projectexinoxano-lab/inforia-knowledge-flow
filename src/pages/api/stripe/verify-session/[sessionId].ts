@@ -1,29 +1,32 @@
-// Ruta: src/pages/api/stripe/verify-session/[sessionId].ts (reemplazar contenido completo)
-import type { NextApiRequest, NextApiResponse } from 'next';
-import Stripe from 'stripe';
+import { Request, Response } from 'express';
+import { getStripeClient } from '../../../lib/stripe-clients.ts';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-08-27.basil',
-});
-
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
+export async function verifySession(req: Request, res: Response): Promise<void> {
   if (req.method !== 'GET') {
-    return res.status(405).json({ error: 'Method not allowed' });
+    res.status(405).json({ error: 'Method not allowed' });
+    return;
   }
 
-  const { sessionId } = req.query;
+  const { sessionId } = req.params;
 
   if (!sessionId || typeof sessionId !== 'string') {
-    return res.status(400).json({ error: 'Session ID requerido' });
+    res.status(400).json({ error: 'Session ID requerido' });
+    return;
   }
 
   try {
+    console.log('[VERIFY-SESSION] Verificando sesión:', sessionId);
+    
+    const stripe = getStripeClient();
     const session = await stripe.checkout.sessions.retrieve(sessionId);
     
-    return res.status(200).json({
+    console.log('[VERIFY-SESSION] Sesión encontrada:', {
+      id: session.id,
+      status: session.payment_status,
+      planId: session.metadata?.planId
+    });
+    
+    res.status(200).json({
       status: session.payment_status,
       amount: session.amount_total || 0,
       planId: session.metadata?.planId || '',
@@ -32,8 +35,8 @@ export default async function handler(
     });
 
   } catch (error: any) {
-    console.error('Error verificando sesión:', error);
-    return res.status(500).json({ 
+    console.error('[VERIFY-SESSION] Error verificando sesión:', error);
+    res.status(500).json({ 
       error: error.message || 'Error interno del servidor' 
     });
   }
